@@ -1,11 +1,11 @@
 Package: multipatchr
-Title: What the Package Does (One Line, Title Case)
+Title: Discrete Time Multi-Patch SEIR Model
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Sangeeta",
+           family = "Bhatia",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
+           email = "s.bhatia@imperial.ac.uk",
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: What the package does (one paragraph).
 License: What license it uses
