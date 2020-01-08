@@ -15,7 +15,11 @@
 ##' recovered in each patch
 ##' @param birth_rates patch-specific birth rates
 ##' @param death_rates patch-specific death rates
-##' @param rate_matrix M rate of movement between
+##' @param transmission_rates Vector of patch-specific transmission
+##' rate
+##' @param infection_rates Vector of patch-specific infection rate
+##' @param recovery_rates Vector of patch-specific recovery rate
+##' @param movement_rate M rate of movement between
 ##' patches is defined the rate matrix M where
 ##' m[i, j] is the rate of movement from i to j
 ##' conditional on moving out of i per unit time.
@@ -25,9 +29,9 @@
 ##' r_patches, birth_rates, and death_rates.
 ##' @return List with class `state`. Each element
 ##' of `state` is a list of class `patch`.
-##' In addition, `state` contains a `rate_matrix`
+##' In addition, `state` contains a `movement_rate`
 ##' which is a non-negative matrix of rates of
-##' movement bwteen patches.
+##' movement between patches.
 ##' @seealso [make_patch()]
 ##' @export
 ##' @author Sangeeta Bhatia
@@ -37,14 +41,20 @@ make_state <- function(s_patches,
                        r_patches,
                        birth_rates,
                        death_rates,
-                       rate_matrix) {
+                       transmission_rates,
+                       infection_rates,
+                       recovery_rates,
+                       movement_rate) {
     args <- list(
         s_patches = s_patches,
         e_patches = e_patches,
         i_patches = i_patches,
         r_patches = r_patches,
         birth_rates = birth_rates,
-        death_rates = death_rates
+        death_rates = death_rates,
+        transmission_rates = transmission_rates,
+        infection_rates = infection_rates,
+        recovery_rates = recovery_rates
     )
 
     nonnumeric <- unlist(
@@ -59,10 +69,10 @@ make_state <- function(s_patches,
         )
     }
 
-    if (! is.matrix(rate_matrix) & any(rate_matrix < 0)) {
+    if (! is.matrix(movement_rate) & any(movement_rate < 0)) {
         stop(
             "when trying to make a state.
-             rate_matrix should be a matrix of non-negative rates.",
+             movement_rate should be a matrix of non-negative rates.",
             call. = FALSE
         )
     }
@@ -72,22 +82,23 @@ make_state <- function(s_patches,
     ## If not, give warning a
     if (max(n) !=  min(n)) {
         warning(
-            "Not all input vectors have the same length. Shorter vectors will be recycled."
+            "Not all input vectors have the same length.
+             Shorter vectors will be recycled."
         )
     }
 
-    npatches <- max(n)
-    args <- lapply(args, rep, length.out = npatches)
+    n_patches <- max(n)
+    args <- lapply(args, rep, length.out = n_patches)
 
     state <- vector(
         mode = "list", length = 2
     )
 
     state[["patches"]] <- vector(
-        mode = "list", length = npatches
+        mode = "list", length = n_patches
     )
 
-    for (idx in seq_len(npatches)) {
+    for (idx in seq_len(n_patches)) {
 
         patch_args <- lapply(args, '[[', idx)
         state[["patches"]][[idx]] <- make_patch(
@@ -96,25 +107,28 @@ make_state <- function(s_patches,
             i_patch = patch_args$i_patches,
             r_patch = patch_args$r_patches,
             birth_rate = patch_args$birth_rates,
-            death_rate = patch_args$death_rates
+            death_rate = patch_args$death_rates,
+            transmission_rate = patch_args$transmission_rate,
+            infection_rate = patch_args$infection_rate,
+            recovery_rate = patch_args$recovery_rate
         )
 
     }
 
     if (
-        nrow(rate_matrix) != npatches ||
-        ncol(rate_matrix) != npatches
+        nrow(movement_rate) != n_patches ||
+        ncol(movement_rate) != n_patches
     ) {
         stop(
             "when trying to make a state.
-             rate_matrix should be a ", npatches,
-            " X ", npatches,
+             movement_rate should be a ", n_patches,
+            " X ", n_patches,
            " matrix",
             call. = FALSE
         )
     }
 
-    state[["rate_matrix"]] <- rate_matrix
+    state[["movement_rate"]] <- movement_rate
     class(state) <- "state"
 
     state

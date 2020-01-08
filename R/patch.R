@@ -22,16 +22,21 @@ make_patch <- function(s_patch,
                        i_patch,
                        r_patch,
                        birth_rate,
-                       death_rate) {
+                       death_rate,
+                       transmission_rate,
+                       infection_rate,
+                       recovery_rate) {
     args <- list(
-        s_patch, e_patch, i_patch, r_patch, birth_rate, death_rate
+        s_patch, e_patch, i_patch, r_patch, birth_rate, death_rate,
+        transmission_rate, infection_rate, recovery_rate
     )
 
     nonnumeric <- unlist(lapply(args, is.numeric))
 
     if (! any(nonnumeric)) {
         stop(
-            "Error when trying to make a patch. At least one argument must be numeric",
+            "Error when trying to make a patch.
+             At least one argument must be numeric",
             call. = FALSE
         )
     }
@@ -43,7 +48,10 @@ make_patch <- function(s_patch,
         infected = i_patch,
         recovered = r_patch,
         birth_rate = birth_rate,
-        death_rate = death_rate
+        death_rate = death_rate,
+        transmission_rate = transmission_rate,
+        infection_rate = infection_rate,
+        recovery_rate = recovery_rate
     )
     class(out) <- "patch"
     out
