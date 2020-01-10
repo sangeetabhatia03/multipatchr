@@ -37,15 +37,15 @@ update_patch <- function(patch, dt) {
 
     patch$susceptible <- patch$susceptible -
      newly_exposed -
-     deaths(patch$birth_rate, dt) +
-     births(patch$birth_rate, dt)
+     deaths(patch$susceptible, patch$death_rate, dt) +
+     births(patch$susceptible, patch$birth_rate, dt)
 
     newly_infected <-  to_next_compartment(
         patch$exposed, patch$infection_rate, dt
     )
     patch$exposed <- patch$exposed -
         newly_infected
-     deaths(patch$birth_rate, dt) +
+     deaths(patch$exposed, patch$death_rate, dt) +
      newly_exposed
 
     newly_recovered <-  to_next_compartment(
@@ -53,12 +53,12 @@ update_patch <- function(patch, dt) {
     )
     patch$infected <- patch$infected -
         newly_recovered -
-     deaths(patch$birth_rate, dt) +
+     deaths(patch$infected, patch$death_rate, dt) +
      newly_infected
 
 
     patch$recovered <- patch$recovered -
-        deaths(patch$birth_rate, dt) +
+        deaths(patch$recovered, patch$death_rate, dt) +
         newly_recovered
 
     patch
@@ -72,7 +72,7 @@ rate_to_probability <- function(rate, dt) {
 
 get_number_migrating <- function(state, dt, compartments) {
 
-    pmat <- 1 - rate_to_probability(state$movement_rate)
+    pmat <- 1 - rate_to_probability(state$movement_rate, dt)
 
     ## For each compartment, get the number of people moving in and
     ## out of patches.
@@ -138,8 +138,8 @@ update_state <- function(state,
         patch <- state[["patches"]][[idx]]
         for (compartment in compartments) {
             patch[[compartment]] <- patch[[compartment]] -
-                to_other_patches(n_moving[[compartment]], i) +
-                from_other_patches(n_moving[[compartment]], i)
+                to_other_patches(n_moving[[compartment]],  idx) +
+                from_other_patches(n_moving[[compartment]], idx)
 
         }
         state[["patches"]][[idx]] <- update_patch(patch, dt)
