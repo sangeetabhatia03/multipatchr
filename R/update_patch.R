@@ -133,9 +133,10 @@ update_state <- function(state,
 
     n_moving <- get_number_migrating(state, dt, compartments)
     n_patches <- length(state[["patches"]])
-    for (idx in seq_len(length(n_patches))) {
+    for (idx in seq_len(n_patches)) {
 
         patch <- state[["patches"]][[idx]]
+
         for (compartment in compartments) {
             patch[[compartment]] <- patch[[compartment]] -
                 to_other_patches(n_moving[[compartment]],  idx) +
