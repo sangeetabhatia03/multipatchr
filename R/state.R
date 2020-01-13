@@ -69,7 +69,7 @@ make_state <- function(s_patches,
         )
     }
 
-    if (! is.matrix(movement_rate) & any(movement_rate < 0)) {
+    if (! is.matrix(movement_rate) || any(movement_rate < 0)) {
         stop(
             "when trying to make a state.
              movement_rate should be a matrix of non-negative rates.",
@@ -93,6 +93,8 @@ make_state <- function(s_patches,
     state <- vector(
         mode = "list", length = 2
     )
+
+    names(state) <- c("patches", "movement_rate")
 
     state[["patches"]] <- vector(
         mode = "list", length = n_patches
