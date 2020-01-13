@@ -4,16 +4,17 @@
 \alias{as.data.frame.state}
 \title{Conversion of state object}
 \usage{
-\method{as.data.frame}{state}(state, row.names = NULL, ...,
-  long = TRUE)
+\method{as.data.frame}{state}(x, row.names = NULL, ..., long = TRUE)
 }
 \arguments{
-\item{state}{object of class `state`}
+\item{x}{object of class `state`}
 
 \item{row.names}{names to be assigned to patches. If NULL,
 names will be numeric from 1 to number of patches. Note that these
 will actually be column values in the data.frame, rather than
 row.names.}
+
+\item{...}{unused arguments}
 
 \item{long}{if true, data frame is in long format with the columns
 patch, variable, and value. Column patch contains the patch name

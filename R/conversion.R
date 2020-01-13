@@ -2,12 +2,13 @@
 ##'
 ##' Convert state object to a data.frame
 ##'
-##' @param state object of class `state`
+##' @param x object of class `state`
 ##'
 ##' @param row.names names to be assigned to patches. If NULL,
 ##' names will be numeric from 1 to number of patches. Note that these
 ##' will actually be column values in the data.frame, rather than
 ##' row.names.
+##' @param ...  unused arguments
 ##' @param long if true, data frame is in long format with the columns
 ##' patch, variable, and value. Column patch contains the patch name
 ##' assigned through row.names (1:number of patches, if row.names
@@ -18,12 +19,12 @@
 ##' @return data.frame
 ##' @author Sangeeta Bhatia
 ##' @export
-as.data.frame.state <- function(state, row.names = NULL, ..., long = TRUE) {
+as.data.frame.state <- function(x, row.names = NULL, ..., long = TRUE) {
 
-    stopifnot(inherits(state, "state"))
+    stopifnot(inherits(x, "state"))
 
 
-    patches <- state[["patches"]]
+    patches <- x[["patches"]]
     n_patches <- length(patches)
 
     if (is.null(row.names)) row.names <- seq_len(n_patches)
