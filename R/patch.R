@@ -8,6 +8,9 @@
 ##' @param r_patch Number of recovered individuals in patch
 ##' @param birth_rate Birth rate for this patch. Number of births per unit time
 ##' @param death_rate Death rate for this patch. Number of deaths per unit time in this patch
+##' @param transmission_rate effective contact rate
+##' @param infection_rate rate of moving from compartment E to I
+##' @param recovery_rate rate of moving from compartment I to R.
 ##' @return a list of class patch which has the following items
 ##' ** susceptible ** Number of susceptibles in this patch
 ##' ** exposed ** Number of exposed individuals in this patch
@@ -15,6 +18,9 @@
 ##' ** recovered ** Number of recovered individuals in this patch
 ##' ** birth_rate ** Patch-specific birth rate
 ##' ** death_rate ** Patch-specific death rate
+##' ** transmission_rate ** Effective contact rate for this patch
+##' ** Infection rate ** Rate at which individuals move from E to I
+##' ** Recovery rate ** Rate at which individuals move from  I to R.
 ##' @export
 ##' @author Sangeeta Bhatia
 make_patch <- function(s_patch,

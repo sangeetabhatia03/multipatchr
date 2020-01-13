@@ -19,6 +19,12 @@ make_patch(s_patch, e_patch, i_patch, r_patch, birth_rate, death_rate,
 \item{birth_rate}{Birth rate for this patch. Number of births per unit time}
 
 \item{death_rate}{Death rate for this patch. Number of deaths per unit time in this patch}
+
+\item{transmission_rate}{effective contact rate}
+
+\item{infection_rate}{rate of moving from compartment E to I}
+
+\item{recovery_rate}{rate of moving from compartment I to R.}
 }
 \value{
 a list of class patch which has the following items
@@ -28,6 +34,9 @@ a list of class patch which has the following items
 ** recovered ** Number of recovered individuals in this patch
 ** birth_rate ** Patch-specific birth rate
 ** death_rate ** Patch-specific death rate
+** transmission_rate ** Effective contact rate for this patch
+** Infection rate ** Rate at which individuals move from E to I
+** Recovery rate ** Rate at which individuals move from  I to R.
 }
 \description{
 Build a patch with seir compartments and patch-specific birth and death rates
