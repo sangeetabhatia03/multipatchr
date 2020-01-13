@@ -6,7 +6,7 @@
 \usage{
 make_state(s_patches, e_patches, i_patches, r_patches, birth_rates,
   death_rates, transmission_rates, infection_rates, recovery_rates,
-  rate_matrix)
+  movement_rate)
 }
 \arguments{
 \item{s_patches}{Vector of number of
@@ -25,7 +25,14 @@ recovered in each patch}
 
 \item{death_rates}{patch-specific death rates}
 
-\item{rate_matrix}{M rate of movement between
+\item{transmission_rates}{Vector of patch-specific transmission
+rate}
+
+\item{infection_rates}{Vector of patch-specific infection rate}
+
+\item{recovery_rates}{Vector of patch-specific recovery rate}
+
+\item{movement_rate}{M rate of movement between
 patches is defined the rate matrix M where
 m[i, j] is the rate of movement from i to j
 conditional on moving out of i per unit time.
@@ -37,7 +44,7 @@ r_patches, birth_rates, and death_rates.}
 \value{
 List with class `state`. Each element
 of `state` is a list of class `patch`.
-In addition, `state` contains a `rate_matrix`
+In addition, `state` contains a `movement_rate`
 which is a non-negative matrix of rates of
 movement between patches.
 }

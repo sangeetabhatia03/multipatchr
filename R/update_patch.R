@@ -1,17 +1,17 @@
 deaths <- function(n, death_rate, dt) {
 
-    rbinom(1, size = n, prob = death_rate * dt)
+    stats::rbinom(1, size = n, prob = death_rate * dt)
 }
 
 births <- function(n, birth_rate, dt) {
 
-    rbinom(1, size = n, prob = birth_rate * dt)
+    stats::rbinom(1, size = n, prob = birth_rate * dt)
 }
 
 to_next_compartment <- function(n_current, rate, dt) {
 
     prob <- 1 - rate_to_probability(rate, dt)
-    rbinom(1, size = n_current, prob = prob)
+    stats::rbinom(1, size = n_current, prob = prob)
 
 }
 
@@ -89,7 +89,7 @@ get_number_migrating <- function(state, dt, compartments) {
 
         for (idx in seq_len(n_patches)) {
 
-            out[idx, ] <- rmultinom(
+            out[idx, ] <- stats::rmultinom(
                 n = 1,
                 size = n_current[idx],
                 prob = pmat[idx, ]
