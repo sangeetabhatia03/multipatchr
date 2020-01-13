@@ -2,3 +2,4 @@
 
 export(make_patch)
 export(make_state)
+export(update_state)

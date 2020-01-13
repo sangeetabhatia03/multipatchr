@@ -136,6 +136,7 @@ from_other_patches <- function(n_moving, patch_idx) {
 ##' @param seed for reproducible results.
 ##' @return state updated
 ##' @author Sangeeta Bhatia
+##' @export
 update_state <- function(state,
                          dt,
                          compartments = c("susceptible",
