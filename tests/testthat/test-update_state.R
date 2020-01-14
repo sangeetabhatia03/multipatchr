@@ -4,7 +4,7 @@ context("state update")
 ## and with a fixed seed, check that the numbers work out.
 test_that("update state works with no births and deaths", {
 
-    state_in <- make_state(
+    state_in <- state(
         s_patches = 1000,
         e_patches = 0,
         i_patches = 10,

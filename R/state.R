@@ -32,19 +32,20 @@
 ##' In addition, `state` contains a `movement_rate`
 ##' which is a non-negative matrix of rates of
 ##' movement between patches.
-##' @seealso [make_patch()]
+##' @seealso [patch()]
 ##' @export
 ##' @author Sangeeta Bhatia
-make_state <- function(s_patches,
-                       e_patches,
-                       i_patches,
-                       r_patches,
-                       birth_rates,
-                       death_rates,
-                       transmission_rates,
-                       infection_rates,
-                       recovery_rates,
-                       movement_rate) {
+state <- function(s_patches,
+                  e_patches,
+                  i_patches,
+                  r_patches,
+                  birth_rates,
+                  death_rates,
+                  transmission_rates,
+                  infection_rates,
+                  recovery_rates,
+                  movement_rate) {
+
     args <- list(
         s_patches = s_patches,
         e_patches = e_patches,
@@ -103,7 +104,7 @@ make_state <- function(s_patches,
     for (idx in seq_len(n_patches)) {
 
         patch_args <- lapply(args, '[[', idx)
-        state[["patches"]][[idx]] <- make_patch(
+        state[["patches"]][[idx]] <- patch(
             s_patch = patch_args$s_patches,
             e_patch = patch_args$e_patches,
             i_patch = patch_args$i_patches,

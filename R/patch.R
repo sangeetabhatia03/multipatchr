@@ -23,15 +23,15 @@
 ##' ** Recovery rate ** Rate at which individuals move from  I to R.
 ##' @export
 ##' @author Sangeeta Bhatia
-make_patch <- function(s_patch,
-                       e_patch,
-                       i_patch,
-                       r_patch,
-                       birth_rate,
-                       death_rate,
-                       transmission_rate,
-                       infection_rate,
-                       recovery_rate) {
+patch <- function(s_patch,
+                  e_patch,
+                  i_patch,
+                  r_patch,
+                  birth_rate,
+                  death_rate,
+                  transmission_rate,
+                  infection_rate,
+                  recovery_rate) {
     args <- list(
         s_patch, e_patch, i_patch, r_patch, birth_rate, death_rate,
         transmission_rate, infection_rate, recovery_rate
