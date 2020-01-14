@@ -56,10 +56,11 @@ as.data.frame.patch <- function(x, row.names = NULL, ..., long = TRUE) {
 
     variables <- names(x)
     for (var in variables) {
+
         df <- data.frame(
             patch = row.names[1],
             variable = var,
-            value = patch[[var]]
+            value = x[[var]]
         )
         out <- rbind(out, df)
      }
