@@ -47,6 +47,30 @@ patch <- function(s_patch,
         )
     }
 
+    ## Number of individuals in any compartment must be
+    ## an integer, else rbinom will generate NAs.
+    are_integers <- lapply(
+        c(s_patch, e_patch, i_patch, r_patch),
+        function(x) all.equal(x, as.ineteger(x))
+    )
+
+    are_positive <- c(s_patch, e_patch, i_patch, r_patch) >= 0
+
+    stopifnot(all(are_positive))
+
+    if (! all(are_integers)) {
+
+        warning(
+            "Number of individuals in each compartment should be a
+             positive integer. Rounding up."
+        )
+
+        s_patch <- ceiling(s_patch)
+        e_patch <- ceiling(e_patch)
+        i_patch <- ceiling(i_patch)
+        r_patch <- ceiling(r_patch)
+
+    }
 
     out <- list(
         susceptible = s_patch,
