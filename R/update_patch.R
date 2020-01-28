@@ -1,19 +1,23 @@
 deaths <- function(n, death_rate, dt, seed) {
 
     if (! is.null(seed)) set.seed(seed)
+
     stats::rbinom(1, size = n, prob = death_rate * dt)
 }
 
 births <- function(n, birth_rate, dt, seed) {
 
     if (! is.null(seed)) set.seed(seed)
+
     stats::rbinom(1, size = n, prob = birth_rate * dt)
 }
 
 to_next_compartment <- function(n_current, rate, dt, seed) {
 
     prob <- 1 - rate_to_probability(rate, dt)
+
     if (! is.null(seed)) set.seed(seed)
+
     stats::rbinom(1, size = n_current, prob = prob)
 
 }
@@ -91,7 +95,9 @@ get_number_migrating <- function(state, dt, compartments, seed) {
         )
 
         for (idx in seq_len(n_patches)) {
+
             if (! is.null(seed)) set.seed(seed)
+
             out[idx, ] <- stats::rmultinom(
                 n = 1,
                 size = n_current[idx],
@@ -103,6 +109,7 @@ get_number_migrating <- function(state, dt, compartments, seed) {
     }
     n_moving
 }
+
 
 
 ## n_moving is a matrix such that n_moving[i, j] is the
@@ -158,6 +165,7 @@ update_state <- function(state,
                 from_other_patches(n_moving[[compartment]], idx)
 
         }
+
         state[["patches"]][[idx]] <- update_patch(patch, dt, seed)
 
     }

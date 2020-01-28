@@ -49,9 +49,9 @@ patch <- function(s_patch,
 
     ## Number of individuals in any compartment must be
     ## an integer, else rbinom will generate NAs.
-    are_integers <- lapply(
+    are_integers <- sapply(
         c(s_patch, e_patch, i_patch, r_patch),
-        function(x) all.equal(x, as.ineteger(x))
+        function(x) all.equal(x, as.integer(x))
     )
 
     are_positive <- c(s_patch, e_patch, i_patch, r_patch) >= 0
