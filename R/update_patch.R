@@ -42,8 +42,6 @@ update_patch <- function(patch, dt, seed = NULL) {
           patch$susceptible, exposure_rate, dt, seed
       )
 
-    message("newly_exposed = ", newly_exposed)
-
     patch$susceptible <- patch$susceptible -
      newly_exposed -
      deaths(patch$susceptible, patch$death_rate, dt, seed) +
@@ -52,8 +50,6 @@ update_patch <- function(patch, dt, seed = NULL) {
     newly_infected <-  to_next_compartment(
         patch$exposed, patch$infection_rate, dt, seed
     )
-
-    message("newly_infected = ", newly_infected)
 
     patch$exposed <- patch$exposed -
         newly_infected -
