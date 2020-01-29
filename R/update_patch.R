@@ -1,29 +1,23 @@
-deaths <- function(n, death_rate, dt, seed) {
-
-    if (! is.null(seed)) set.seed(seed)
+deaths <- function(n, death_rate, dt) {
 
     stats::rbinom(1, size = n, prob = death_rate * dt)
 }
 
-births <- function(n, birth_rate, dt, seed) {
-
-    if (! is.null(seed)) set.seed(seed)
+births <- function(n, birth_rate, dt) {
 
     stats::rbinom(1, size = n, prob = birth_rate * dt)
 }
 
-to_next_compartment <- function(n_current, rate, dt, seed) {
+to_next_compartment <- function(n_current, rate, dt) {
 
     prob <- 1 - rate_to_probability(rate, dt)
-
-    if (! is.null(seed)) set.seed(seed)
 
     stats::rbinom(1, size = n_current, prob = prob)
 
 }
 
 
-update_patch <- function(patch, dt, seed = NULL) {
+update_patch <- function(patch, dt) {
 
     if (! inherits(patch, "patch")) {
         stop(
@@ -39,34 +33,34 @@ update_patch <- function(patch, dt, seed = NULL) {
                           patch$recovered)
 
     newly_exposed <- to_next_compartment(
-          patch$susceptible, exposure_rate, dt, seed
+          patch$susceptible, exposure_rate, dt
       )
 
     patch$susceptible <- patch$susceptible -
      newly_exposed -
-     deaths(patch$susceptible, patch$death_rate, dt, seed) +
-     births(patch$susceptible, patch$birth_rate, dt, seed)
+     deaths(patch$susceptible, patch$death_rate, dt) +
+     births(patch$susceptible, patch$birth_rate, dt)
 
     newly_infected <-  to_next_compartment(
-        patch$exposed, patch$infection_rate, dt, seed
+        patch$exposed, patch$infection_rate, dt
     )
 
     patch$exposed <- patch$exposed -
         newly_infected -
-     deaths(patch$exposed, patch$death_rate, dt, seed) +
+     deaths(patch$exposed, patch$death_rate, dt) +
      newly_exposed
 
     newly_recovered <-  to_next_compartment(
-          patch$infected, patch$recovery_rate, dt, seed
+          patch$infected, patch$recovery_rate, dt
     )
     patch$infected <- patch$infected -
         newly_recovered -
-     deaths(patch$infected, patch$death_rate, dt, seed) +
+     deaths(patch$infected, patch$death_rate, dt) +
      newly_infected
 
 
     patch$recovered <- patch$recovered -
-        deaths(patch$recovered, patch$death_rate, dt, seed) +
+        deaths(patch$recovered, patch$death_rate, dt) +
         newly_recovered
 
     patch
@@ -78,7 +72,7 @@ rate_to_probability <- function(rate, dt) {
 
 }
 
-get_number_migrating <- function(state, dt, compartments, seed) {
+get_number_migrating <- function(state, dt, compartments) {
 
     pmat <- 1 - rate_to_probability(state$movement_rate, dt)
 
@@ -96,8 +90,6 @@ get_number_migrating <- function(state, dt, compartments, seed) {
         )
 
         for (idx in seq_len(n_patches)) {
-
-            if (! is.null(seed)) set.seed(seed)
 
             out[idx, ] <- stats::rmultinom(
                 n = 1,
@@ -141,7 +133,6 @@ from_other_patches <- function(n_moving, patch_idx) {
 ##' with the units on rates. For instance, if the various rates are
 ##' per week, dt is assumed to be dt weeks.
 ##' @param compartments in case they are different from SEIR
-##' @param seed for reproducible results.
 ##' @return state updated
 ##' @author Sangeeta Bhatia
 ##' @export
@@ -150,11 +141,10 @@ update_state <- function(state,
                          compartments = c("susceptible",
                                           "exposed",
                                           "infected",
-                                          "recovered"),
-                         seed = NULL
+                                          "recovered")
                          ) {
 
-    n_moving <- get_number_migrating(state, dt, compartments, seed)
+    n_moving <- get_number_migrating(state, dt, compartments)
     n_patches <- length(state[["patches"]])
     for (idx in seq_len(n_patches)) {
 
@@ -167,7 +157,7 @@ update_state <- function(state,
 
         }
 
-        state[["patches"]][[idx]] <- update_patch(patch, dt, seed)
+        state[["patches"]][[idx]] <- update_patch(patch, dt)
 
     }
     state

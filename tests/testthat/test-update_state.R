@@ -16,8 +16,8 @@ test_that("update state with no births and deaths and one patch", {
         recovery_rates = 0.1,
         movement_rate = matrix(1, nrow = 1, ncol = 1)
     )
-
-    state_out <- update_state(state_in, 1, seed = 42)
+    set.seed(42)
+    state_out <- update_state(state_in, 1)
     patch <- state_out[["patches"]][[1]]
 
     expect_equal(patch$susceptible, 996)
@@ -43,22 +43,22 @@ test_that("update state with no births and deaths and 2 patches", {
             c(1.61, 0.22, 0.36, 1.2), nrow = 2, ncol = 2, byrow = TRUE
         )
     )
-
-    state_out <- update_state(state_in, 1, seed = 42)
+    set.seed(42)
+    state_out <- update_state(state_in, 1)
 
     patch1 <- state_out[["patches"]][[1]]
 
-    expect_equal(patch1$susceptible, 1098)
-    expect_equal(patch1$exposed, 4)
-    expect_equal(patch1$infected, 9)
-    expect_equal(patch1$recovered, 2)
+    expect_equal(patch1$susceptible, 1124)
+    expect_equal(patch1$exposed, 2)
+    expect_equal(patch1$infected, 7)
+    expect_equal(patch1$recovered, 1)
 
 
     patch2 <- state_out[["patches"]][[2]]
 
-    expect_equal(patch2$susceptible, 894)
-    expect_equal(patch2$exposed, 4)
-    expect_equal(patch2$infected, 7)
+    expect_equal(patch2$susceptible, 872)
+    expect_equal(patch2$exposed, 2)
+    expect_equal(patch2$infected, 10)
     expect_equal(patch2$recovered, 2)
 
 

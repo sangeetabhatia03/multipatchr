@@ -5,7 +5,7 @@
 \title{Update state}
 \usage{
 update_state(state, dt, compartments = c("susceptible", "exposed",
-  "infected", "recovered"), seed = NULL)
+  "infected", "recovered"))
 }
 \arguments{
 \item{state}{state is a collection of patches and a matrix of
@@ -17,8 +17,6 @@ with the units on rates. For instance, if the various rates are
 per week, dt is assumed to be dt weeks.}
 
 \item{compartments}{in case they are different from SEIR}
-
-\item{seed}{for reproducible results.}
 }
 \value{
 state updated
