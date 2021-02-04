@@ -45,95 +45,99 @@ state <- function(s_patches,
                   infection_rates,
                   recovery_rates,
                   movement_rate) {
+  args <- list(
+    s_patches = s_patches,
+    e_patches = e_patches,
+    i_patches = i_patches,
+    r_patches = r_patches,
+    birth_rates = birth_rates,
+    death_rates = death_rates,
+    transmission_rates = transmission_rates,
+    infection_rates = infection_rates,
+    recovery_rates = recovery_rates
+  )
 
-    args <- list(
-        s_patches = s_patches,
-        e_patches = e_patches,
-        i_patches = i_patches,
-        r_patches = r_patches,
-        birth_rates = birth_rates,
-        death_rates = death_rates,
-        transmission_rates = transmission_rates,
-        infection_rates = infection_rates,
-        recovery_rates = recovery_rates
-    )
+  nonnumeric <- unlist(lapply(args, is.numeric))
 
-    nonnumeric <- unlist(
-        lapply(args, is.numeric)
-    )
-
-    if (! any(nonnumeric)) {
-        stop(
-            "when trying to make a state.
+  if (!any(nonnumeric)) {
+    stop(
+      "when trying to make a state.
              At least one argument must be numeric",
-            call. = FALSE
-        )
-    }
+      call. = FALSE
+    )
+  }
 
-    if (! is.matrix(movement_rate) || any(movement_rate < 0)) {
-        stop(
-            "when trying to make a state.
+  if (!is.matrix(movement_rate) || any(movement_rate < 0)) {
+    stop(
+      "when trying to make a state.
              movement_rate should be a matrix of non-negative rates.",
-            call. = FALSE
-        )
-    }
+      call. = FALSE
+    )
+  }
 
-    n <- unlist(lapply(args, length))
-    ## Check if all vectors have the same length
-    ## If not, give warning a
-    if (max(n) !=  min(n)) {
-        warning(
-            "Not all input vectors have the same length.
+  n <- unlist(lapply(args, length))
+  ## Check if all vectors have the same length
+  ## If not, give a warning
+  if (max(n) != min(n)) {
+    warning(
+      "Not all input vectors have the same length.
              Shorter vectors will be recycled."
-        )
-    }
-
-    n_patches <- max(n)
-    args <- lapply(args, rep, length.out = n_patches)
-
-    state <- vector(
-        mode = "list", length = 2
     )
+  }
 
-    names(state) <- c("patches", "movement_rate")
+  n_patches <- max(n)
+  args <- lapply(args, rep, length.out = n_patches)
 
-    state[["patches"]] <- vector(
-        mode = "list", length = n_patches
+  state <- vector(
+    mode = "list", length = 3
+  )
+
+  names(state) <- c("patches", "movement_rate", "n_individuals")
+
+  state[["patches"]] <- vector(
+    mode = "list", length = n_patches
+  )
+
+  ## Number of individuals in each patch in each compartment
+  ## at this time. Columns are the 4 compartments.
+  n_individuals <- matrix(NA, nrow = n_patches, ncol = 4)
+  for (idx in seq_len(n_patches)) {
+    n_individuals[idx, 1] <- s_patches
+    n_individuals[idx, 2] <- e_patches
+    n_individuals[idx, 3] <- i_patches
+    n_individuals[idx, 4] <- r_patches
+  }
+
+  for (idx in seq_len(n_patches)) {
+    patch_args <- lapply(args, "[[", idx)
+    state[["patches"]][[idx]] <- patch(
+      s_patch = patch_args$s_patches,
+      e_patch = patch_args$e_patches,
+      i_patch = patch_args$i_patches,
+      r_patch = patch_args$r_patches,
+      birth_rate = patch_args$birth_rates,
+      death_rate = patch_args$death_rates,
+      transmission_rate = patch_args$transmission_rate,
+      infection_rate = patch_args$infection_rate,
+      recovery_rate = patch_args$recovery_rate
     )
+  }
 
-    for (idx in seq_len(n_patches)) {
-
-        patch_args <- lapply(args, '[[', idx)
-        state[["patches"]][[idx]] <- patch(
-            s_patch = patch_args$s_patches,
-            e_patch = patch_args$e_patches,
-            i_patch = patch_args$i_patches,
-            r_patch = patch_args$r_patches,
-            birth_rate = patch_args$birth_rates,
-            death_rate = patch_args$death_rates,
-            transmission_rate = patch_args$transmission_rate,
-            infection_rate = patch_args$infection_rate,
-            recovery_rate = patch_args$recovery_rate
-        )
-
-    }
-
-    if (
-        nrow(movement_rate) != n_patches ||
-        ncol(movement_rate) != n_patches
-    ) {
-        stop(
-            "when trying to make a state.
+  if (
+    nrow(movement_rate) != n_patches ||
+      ncol(movement_rate) != n_patches
+  ) {
+    stop(
+      "when trying to make a state.
              movement_rate should be a ", n_patches,
-            " X ", n_patches,
-           " matrix",
-            call. = FALSE
-        )
-    }
+      " X ", n_patches,
+      " matrix",
+      call. = FALSE
+    )
+  }
 
-    state[["movement_rate"]] <- movement_rate
-    class(state) <- "state"
+  state[["movement_rate"]] <- movement_rate
+  class(state) <- "state"
 
-    state
-
+  state
 }

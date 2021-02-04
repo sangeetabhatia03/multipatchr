@@ -7,8 +7,7 @@
 ##' @author Sangeeta Bhatia
 ##' @export
 is.state <- function(x, ...) {
-
-    inherits(x, "state")
+  inherits(x, "state")
 }
 
 ##' Test for class patch
@@ -20,8 +19,7 @@ is.state <- function(x, ...) {
 ##' @author Sangeeta Bhatia
 ##' @export
 is.patch <- function(x, ...) {
-
-    inherits(x, "patch")
+  inherits(x, "patch")
 }
 
 
@@ -42,30 +40,28 @@ is.patch <- function(x, ...) {
 ##' @return data.frame
 ##' @author Sangeeta Bhatia
 as.data.frame.patch <- function(x, row.names = NULL, ..., long = TRUE) {
+  stopifnot(is.patch(x))
 
-    stopifnot(is.patch(x))
+  if (is.null(row.names)) row.names <- 1
 
-    if (is.null(row.names)) row.names <- 1
+  out <- data.frame(
+    patch = character(),
+    variable = character(),
+    value = numeric(),
+    stringsAsFactors = FALSE
+  )
 
-    out <- data.frame(
-        patch = character(),
-        variable = character(),
-        value = numeric(),
-        stringsAsFactors = FALSE
+  variables <- names(x)
+  for (var in variables) {
+    df <- data.frame(
+      patch = row.names[1],
+      variable = var,
+      value = x[[var]]
     )
+    out <- rbind(out, df)
+  }
 
-    variables <- names(x)
-    for (var in variables) {
-
-        df <- data.frame(
-            patch = row.names[1],
-            variable = var,
-            value = x[[var]]
-        )
-        out <- rbind(out, df)
-     }
-
-    out
+  out
 }
 
 ##' Conversion of state object
@@ -90,32 +86,30 @@ as.data.frame.patch <- function(x, row.names = NULL, ..., long = TRUE) {
 ##' @author Sangeeta Bhatia
 ##' @export
 as.data.frame.state <- function(x, row.names = NULL, ..., long = TRUE) {
-
-    stopifnot(inherits(x, "state"))
-
-
-    patches <- x[["patches"]]
-    n_patches <- length(patches)
-
-    if (is.null(row.names)) row.names <- seq_len(n_patches)
-
-    names(patches) <- row.names
-
-    out <- data.frame(
-        patch = character(),
-        variable = character(),
-        value = numeric(),
-        stringsAsFactors = FALSE
-    )
+  stopifnot(inherits(x, "state"))
 
 
-    for (patch_idx in row.names) {
-        patch <- patches[[patch_idx]]
-        df <- as.data.frame(patch, row.names = patch_idx)
-        out <- rbind(out, df)
-    }
-    ## TODO: Affix movement_rate to this data frame.
-    ## TODO: Implement long = FALSE
-   out
+  patches <- x[["patches"]]
+  n_patches <- length(patches)
 
+  if (is.null(row.names)) row.names <- seq_len(n_patches)
+
+  names(patches) <- row.names
+
+  out <- data.frame(
+    patch = character(),
+    variable = character(),
+    value = numeric(),
+    stringsAsFactors = FALSE
+  )
+
+
+  for (patch_idx in row.names) {
+    patch <- patches[[patch_idx]]
+    df <- as.data.frame(patch, row.names = patch_idx)
+    out <- rbind(out, df)
+  }
+  ## TODO: Affix movement_rate to this data frame.
+  ## TODO: Implement long = FALSE
+  out
 }

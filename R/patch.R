@@ -32,57 +32,55 @@ patch <- function(s_patch,
                   transmission_rate,
                   infection_rate,
                   recovery_rate) {
-    args <- list(
-        s_patch, e_patch, i_patch, r_patch, birth_rate, death_rate,
-        transmission_rate, infection_rate, recovery_rate
-    )
+  args <- list(
+    s_patch, e_patch, i_patch, r_patch, birth_rate, death_rate,
+    transmission_rate, infection_rate, recovery_rate
+  )
 
-    nonnumeric <- unlist(lapply(args, is.numeric))
+  nonnumeric <- unlist(lapply(args, is.numeric))
 
-    if (! any(nonnumeric)) {
-        stop(
-            "Error when trying to make a patch.
+  if (!any(nonnumeric)) {
+    stop(
+      "Error when trying to make a patch.
              At least one argument must be numeric",
-            call. = FALSE
-        )
-    }
-
-    ## Number of individuals in any compartment must be
-    ## an integer, else rbinom will generate NAs.
-    are_integers <- sapply(
-        c(s_patch, e_patch, i_patch, r_patch),
-        function(x) all.equal(x, as.integer(x))
+      call. = FALSE
     )
+  }
 
-    are_positive <- c(s_patch, e_patch, i_patch, r_patch) >= 0
+  ## Number of individuals in any compartment must be
+  ## an integer, else rbinom will generate NAs.
+  are_integers <- sapply(
+    c(s_patch, e_patch, i_patch, r_patch),
+    function(x) all.equal(x, as.integer(x))
+  )
 
-    stopifnot(all(are_positive))
+  are_positive <- c(s_patch, e_patch, i_patch, r_patch) >= 0
 
-    if (! all(are_integers)) {
+  stopifnot(all(are_positive))
 
-        warning(
-            "Number of individuals in each compartment should be a
+  if (!all(are_integers)) {
+    warning(
+      "Number of individuals in each compartment should be a
              positive integer. Rounding up."
-        )
-
-        s_patch <- ceiling(s_patch)
-        e_patch <- ceiling(e_patch)
-        i_patch <- ceiling(i_patch)
-        r_patch <- ceiling(r_patch)
-
-    }
-
-    out <- list(
-        susceptible = s_patch,
-        exposed = e_patch,
-        infected = i_patch,
-        recovered = r_patch,
-        birth_rate = birth_rate,
-        death_rate = death_rate,
-        transmission_rate = transmission_rate,
-        infection_rate = infection_rate,
-        recovery_rate = recovery_rate
     )
-    class(out) <- "patch"
-    out
+
+    s_patch <- ceiling(s_patch)
+    e_patch <- ceiling(e_patch)
+    i_patch <- ceiling(i_patch)
+    r_patch <- ceiling(r_patch)
+  }
+
+  out <- list(
+    susceptible = s_patch,
+    exposed = e_patch,
+    infected = i_patch,
+    recovered = r_patch,
+    birth_rate = birth_rate,
+    death_rate = death_rate,
+    transmission_rate = transmission_rate,
+    infection_rate = infection_rate,
+    recovery_rate = recovery_rate
+  )
+  class(out) <- "patch"
+  out
 }
