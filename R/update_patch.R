@@ -16,7 +16,6 @@ to_next_compartment <- function(n_current, rate, dt) {
 
 }
 
-
 update_patch <- function(patch, dt) {
 
     if (! inherits(patch, "patch")) {
@@ -72,9 +71,17 @@ rate_to_probability <- function(rate, dt) {
 
 }
 
-get_number_migrating <- function(state, dt, compartments) {
+get_number_migrating <- function(state, dt, compartments, movement_as_rate) {
 
+  if (isTRUE(movement_as_rate)) {
+    
     pmat <- 1 - rate_to_probability(state$movement_rate, dt)
+    
+  } else {
+    
+    pmat <- state$movement_rate
+    
+  }
 
     ## For each compartment, get the number of people moving in and
     ## out of patches.
@@ -141,10 +148,11 @@ update_state <- function(state,
                          compartments = c("susceptible",
                                           "exposed",
                                           "infected",
-                                          "recovered")
+                                          "recovered"),
+                         movement_as_rate = TRUE
                          ) {
 
-    n_moving <- get_number_migrating(state, dt, compartments)
+    n_moving <- get_number_migrating(state, dt, compartments, movement_as_rate)
     n_patches <- length(state[["patches"]])
     for (idx in seq_len(n_patches)) {
 
@@ -162,3 +170,4 @@ update_state <- function(state,
     }
     state
 }
+
