@@ -5,7 +5,7 @@
 \title{Update state}
 \usage{
 update_state(state, dt, compartments = c("susceptible", "exposed",
-  "infected", "recovered"), movement_as_rate = TRUE)
+  "infected", "recovered"), movement_type = c("rate", "probability"))
 }
 \arguments{
 \item{state}{state is a collection of patches and a matrix of
@@ -18,10 +18,9 @@ per week, dt is assumed to be dt weeks.}
 
 \item{compartments}{in case they are different from SEIR}
 
-\item{movement_as_rate}{the default is that the movement matrix
-input represents rates (with the caveat on appropriate units from
-above remaining valid). If the values in the movement matrix are
-probabilities then the value of this argument should be set to FALSE.}
+\item{movement_type}{select whether the movement matrix input
+contains rates (with the caveat on appropriate units from
+above remaining valid) or probabilities.}
 }
 \value{
 state updated

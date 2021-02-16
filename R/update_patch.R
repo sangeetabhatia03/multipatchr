@@ -71,44 +71,44 @@ rate_to_probability <- function(rate, dt) {
 
 }
 
-get_number_migrating <- function(state, dt, compartments, movement_as_rate) {
-
-  if (isTRUE(movement_as_rate)) {
+get_number_migrating <- function(state, dt, compartments, movement_type) {
+  
+    if (movement_type == "rate") {
+      
+      pmat <- 1 - rate_to_probability(state$movement_rate, dt)
+      
+    } else {
+      
+      pmat <- state$movement_rate
+      
+    }
     
-    pmat <- 1 - rate_to_probability(state$movement_rate, dt)
-    
-  } else {
-    
-    pmat <- state$movement_rate
-    
-  }
-
     ## For each compartment, get the number of people moving in and
     ## out of patches.
     n_moving <- vector(
-        mode = "list", length = length(compartments)
+      mode = "list", length = length(compartments)
     )
     names(n_moving) <- compartments
     n_patches <- length(state[["patches"]])
     for (compartment in compartments) {
-        n_current <- sapply(state[["patches"]], '[[', compartment)
-        out <- matrix(
-            NA, ncol = n_patches, nrow = n_patches
-        )
-
-        for (idx in seq_len(n_patches)) {
-
-            out[idx, ] <- stats::rmultinom(
-                n = 1,
-                size = n_current[idx],
-                prob = pmat[idx, ]
-            )[,1]
-
-        }
-        n_moving[[compartment]] <- out
+      n_current <- sapply(state[["patches"]], '[[', compartment)
+      out <- matrix(
+        NA, ncol = n_patches, nrow = n_patches
+      )
+      
+      for (idx in seq_len(n_patches)) {
+        
+        out[idx, ] <- stats::rmultinom(
+          n = 1,
+          size = n_current[idx],
+          prob = pmat[idx, ]
+        )[,1]
+        
+      }
+      n_moving[[compartment]] <- out
     }
     n_moving
-}
+  }
 
 
 
@@ -140,10 +140,9 @@ from_other_patches <- function(n_moving, patch_idx) {
 ##' with the units on rates. For instance, if the various rates are
 ##' per week, dt is assumed to be dt weeks.
 ##' @param compartments in case they are different from SEIR
-##' @param movement_as_rate the default is that the movement matrix
-##' input represents rates (with the caveat on appropriate units from
-##' above remaining valid). If the values in the movement matrix are
-##' probabilities then the value of this argument should be set to FALSE. 
+##' @param movement_type select whether the movement matrix input
+##' contains rates (with the caveat on appropriate units from
+##' above remaining valid) or probabilities. 
 ##' @return state updated
 ##' @author Sangeeta Bhatia
 ##' @export
@@ -153,25 +152,27 @@ update_state <- function(state,
                                           "exposed",
                                           "infected",
                                           "recovered"),
-                         movement_as_rate = TRUE
-                         ) {
-
-    n_moving <- get_number_migrating(state, dt, compartments, movement_as_rate)
+                         movement_type = c("rate", "probability")
+                        ) {
+  
+    movement_type <- match.arg(movement_type)
+    
+    n_moving <- get_number_migrating(state, dt, compartments, movement_type)
     n_patches <- length(state[["patches"]])
     for (idx in seq_len(n_patches)) {
-
-        patch <- state[["patches"]][[idx]]
-
-        for (compartment in compartments) {
-            patch[[compartment]] <- patch[[compartment]] -
-                to_other_patches(n_moving[[compartment]],  idx) +
-                from_other_patches(n_moving[[compartment]], idx)
-
-        }
-
-        state[["patches"]][[idx]] <- update_patch(patch, dt)
-
+      
+      patch <- state[["patches"]][[idx]]
+      
+      for (compartment in compartments) {
+        patch[[compartment]] <- patch[[compartment]] -
+          to_other_patches(n_moving[[compartment]],  idx) +
+          from_other_patches(n_moving[[compartment]], idx)
+        
+      }
+      
+      state[["patches"]][[idx]] <- update_patch(patch, dt)
+      
     }
     state
-}
+  }
 
