@@ -140,6 +140,10 @@ from_other_patches <- function(n_moving, patch_idx) {
 ##' with the units on rates. For instance, if the various rates are
 ##' per week, dt is assumed to be dt weeks.
 ##' @param compartments in case they are different from SEIR
+##' @param movement_as_rate the default is that the movement matrix
+##' input represents rates (with the caveat on appropriate units from
+##' above remaining valid). If the values in the movement matrix are
+##' probabilities then the value of this argument should be set to FALSE. 
 ##' @return state updated
 ##' @author Sangeeta Bhatia
 ##' @export
