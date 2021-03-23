@@ -165,7 +165,8 @@ update_state <- function(state,
                                           "exposed",
                                           "infected",
                                           "recovered"),
-                         movement_type = c("rate", "probability")
+                         movement_type = c("rate", "probability"),
+                         relative_movement = c(1, 1, 1, 1)
                         ) {
   
     movement_type <- match.arg(movement_type)
