@@ -26,7 +26,7 @@ above remaining valid) or probabilities.}
 \item{relative_movement}{vector specifying the relative movement
 in each infection compartment. By default all values are set to 1.
 We can state that movement in a given compartment should be reduced
-to 10% the normal level by replacing that vector element with 0.1.}
+to 10 percent the normal level by replacing that vector element with 0.1.}
 }
 \value{
 state updated
