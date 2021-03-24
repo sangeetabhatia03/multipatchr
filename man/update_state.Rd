@@ -5,7 +5,8 @@
 \title{Update state}
 \usage{
 update_state(state, dt, compartments = c("susceptible", "exposed",
-  "infected", "recovered"))
+  "infected", "recovered"), movement_type = c("rate", "probability"),
+  relative_movement = c(1, 1, 1, 1))
 }
 \arguments{
 \item{state}{state is a collection of patches and a matrix of
@@ -17,6 +18,15 @@ with the units on rates. For instance, if the various rates are
 per week, dt is assumed to be dt weeks.}
 
 \item{compartments}{in case they are different from SEIR}
+
+\item{movement_type}{select whether the movement matrix input
+contains rates (with the caveat on appropriate units from
+above remaining valid) or probabilities.}
+
+\item{relative_movement}{vector specifying the relative movement
+in each infection compartment. By default all values are set to 1.
+We can state that movement in a given compartment should be reduced
+to 10 percent the normal level by replacing that vector element with 0.1.}
 }
 \value{
 state updated
