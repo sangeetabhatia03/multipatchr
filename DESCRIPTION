@@ -16,3 +16,5 @@ Roxygen: list(old_usage = TRUE)
 Suggests: 
     testthat (>= 2.1.0),
     covr
+Imports: 
+    purrr

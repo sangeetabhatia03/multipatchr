@@ -87,7 +87,7 @@ get_number_migrating <- function(state, dt, compartments, movement_type, relativ
   ## e.g. infected people might move less than others
   compartment_moving <- purrr::imap(compartments, function(comp, index) {
     
-    out <- movement * relative_movement[index]
+    out <- pmat * relative_movement[index]
     diag(out) <- 0
     diag(out) <- 1 - rowSums(out)
     out
@@ -175,7 +175,7 @@ update_state <- function(state,
   
     movement_type <- match.arg(movement_type)
     
-    n_moving <- get_number_migrating(state, dt, compartments, movement_type)
+    n_moving <- get_number_migrating(state, dt, compartments, movement_type, relative_movement)
     n_patches <- length(state[["patches"]])
     for (idx in seq_len(n_patches)) {
       
