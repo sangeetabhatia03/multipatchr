@@ -155,7 +155,11 @@ from_other_patches <- function(n_moving, patch_idx) {
 ##' @param compartments in case they are different from SEIR
 ##' @param movement_type select whether the movement matrix input
 ##' contains rates (with the caveat on appropriate units from
-##' above remaining valid) or probabilities. 
+##' above remaining valid) or probabilities.
+##' @param relative_movement vector specifying the relative movement
+##' in each infection compartment. By default all values are set to 1.
+##' We can state that movement in a given compartment should be reduced
+##' to 10% the normal level by replacing that vector element with 0.1.  
 ##' @return state updated
 ##' @author Sangeeta Bhatia
 ##' @export
