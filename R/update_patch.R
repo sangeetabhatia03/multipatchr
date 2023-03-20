@@ -189,6 +189,8 @@ update_state <- function(state,
         
       }
       
+      state[["n_moving"]] <- n_moving
+      
       state[["patches"]][[idx]] <- update_patch(patch, dt)
       
     }
