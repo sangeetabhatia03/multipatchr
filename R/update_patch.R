@@ -16,7 +16,6 @@ to_next_compartment <- function(n_current, rate, dt) {
 
 }
 
-
 update_patch <- function(patch, dt) {
 
     if (! inherits(patch, "patch")) {
@@ -72,35 +71,57 @@ rate_to_probability <- function(rate, dt) {
 
 }
 
-get_number_migrating <- function(state, dt, compartments) {
-
+get_number_migrating <- function(state, dt, compartments, movement_type, relative_movement) {
+  
+  if (movement_type == "rate") {
+    
     pmat <- 1 - rate_to_probability(state$movement_rate, dt)
-
-    ## For each compartment, get the number of people moving in and
-    ## out of patches.
-    n_moving <- vector(
-        mode = "list", length = length(compartments)
+    
+  } else {
+    
+    pmat <- state$movement_rate
+    
+  }
+  
+  ## Include any compartment effects on movement
+  ## e.g. infected people might move less than others
+  compartment_moving <- purrr::imap(compartments, function(comp, index) {
+    
+    out <- pmat * relative_movement[index]
+    diag(out) <- 0
+    diag(out) <- 1 - rowSums(out)
+    diag(out)[diag(out) < 0] <- 0  # to correct floating-point errors that can occur
+    out
+    
+  })
+  
+  names(compartment_moving) <- compartments
+  
+  ## For each compartment, get the number of people moving in and
+  ## out of patches.
+  n_moving <- vector(
+    mode = "list", length = length(compartments)
+  )
+  names(n_moving) <- compartments
+  n_patches <- length(state[["patches"]])
+  for (compartment in compartments) {
+    n_current <- sapply(state[["patches"]], '[[', compartment)
+    out <- matrix(
+      NA, ncol = n_patches, nrow = n_patches
     )
-    names(n_moving) <- compartments
-    n_patches <- length(state[["patches"]])
-    for (compartment in compartments) {
-        n_current <- sapply(state[["patches"]], '[[', compartment)
-        out <- matrix(
-            NA, ncol = n_patches, nrow = n_patches
-        )
-
-        for (idx in seq_len(n_patches)) {
-
-            out[idx, ] <- stats::rmultinom(
-                n = 1,
-                size = n_current[idx],
-                prob = pmat[idx, ]
-            )[,1]
-
-        }
-        n_moving[[compartment]] <- out
+    
+    for (idx in seq_len(n_patches)) {
+      
+      out[idx, ] <- stats::rmultinom(
+        n = 1,
+        size = n_current[idx],
+        prob = compartment_moving[[compartment]][idx, ]
+      )[,1]
+      
     }
-    n_moving
+    n_moving[[compartment]] <- out
+  }
+  n_moving
 }
 
 
@@ -133,6 +154,13 @@ from_other_patches <- function(n_moving, patch_idx) {
 ##' with the units on rates. For instance, if the various rates are
 ##' per week, dt is assumed to be dt weeks.
 ##' @param compartments in case they are different from SEIR
+##' @param movement_type select whether the movement matrix input
+##' contains rates (with the caveat on appropriate units from
+##' above remaining valid) or probabilities.
+##' @param relative_movement vector specifying the relative movement
+##' in each infection compartment. By default all values are set to 1.
+##' We can state that movement in a given compartment should be reduced
+##' to 10 percent the normal level by replacing that vector element with 0.1.  
 ##' @return state updated
 ##' @author Sangeeta Bhatia
 ##' @export
@@ -141,24 +169,31 @@ update_state <- function(state,
                          compartments = c("susceptible",
                                           "exposed",
                                           "infected",
-                                          "recovered")
-                         ) {
-
-    n_moving <- get_number_migrating(state, dt, compartments)
+                                          "recovered"),
+                         movement_type = c("rate", "probability"),
+                         relative_movement = c(1, 1, 1, 1)
+                        ) {
+  
+    movement_type <- match.arg(movement_type)
+    
+    n_moving <- get_number_migrating(state, dt, compartments, movement_type, relative_movement)
     n_patches <- length(state[["patches"]])
     for (idx in seq_len(n_patches)) {
-
-        patch <- state[["patches"]][[idx]]
-
-        for (compartment in compartments) {
-            patch[[compartment]] <- patch[[compartment]] -
-                to_other_patches(n_moving[[compartment]],  idx) +
-                from_other_patches(n_moving[[compartment]], idx)
-
-        }
-
-        state[["patches"]][[idx]] <- update_patch(patch, dt)
-
+      
+      patch <- state[["patches"]][[idx]]
+      
+      for (compartment in compartments) {
+        patch[[compartment]] <- patch[[compartment]] -
+          to_other_patches(n_moving[[compartment]],  idx) +
+          from_other_patches(n_moving[[compartment]], idx)
+        
+      }
+      
+      state[["n_moving"]] <- n_moving
+      
+      state[["patches"]][[idx]] <- update_patch(patch, dt)
+      
     }
     state
-}
+  }
+
