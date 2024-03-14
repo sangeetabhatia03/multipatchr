@@ -44,8 +44,8 @@ state <- function(s_patches,
                   transmission_rates,
                   infection_rates,
                   recovery_rates,
-                  movement_rate,
-                  n_moving) {
+                  movement_rate
+                  ) {
 
     args <- list(
         s_patches = s_patches,
@@ -133,7 +133,7 @@ state <- function(s_patches,
     }
 
     state[["movement_rate"]] <- movement_rate
-    state[["n_moving"]] <- n_moving
+    
     class(state) <- "state"
 
     state
