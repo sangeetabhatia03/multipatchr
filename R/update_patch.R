@@ -71,6 +71,52 @@ update_patch <- function(patch, dt) {
   patch
 }
 
+# Function to allow mixing between all the sub-patches in ksa
+update_ksa_patch <- function(patch, dt, patch_exposure_rate) {
+  
+  if (! inherits(patch, "patch")) {
+    stop(
+      "Error in updating patch. Argument not of class patch.",
+      call. = FALSE
+    )
+  }
+  
+  exposure_rate <- patch_exposure_rate
+  
+  newly_exposed <- to_next_compartment(
+    patch$susceptible, exposure_rate, dt
+  )
+  
+  patch$susceptible <- patch$susceptible -
+    newly_exposed -
+    deaths(patch$susceptible, patch$death_rate, dt) +
+    births(patch$susceptible, patch$birth_rate, dt)
+  
+  newly_infected <-  to_next_compartment(
+    patch$exposed, patch$infection_rate, dt
+  )
+  
+  patch$exposed <- patch$exposed -
+    newly_infected -
+    deaths(patch$exposed, patch$death_rate, dt) +
+    newly_exposed
+  
+  newly_recovered <-  to_next_compartment(
+    patch$infected, patch$recovery_rate, dt
+  )
+  patch$infected <- patch$infected -
+    newly_recovered -
+    deaths(patch$infected, patch$death_rate, dt) +
+    newly_infected
+  
+  
+  patch$recovered <- patch$recovered -
+    deaths(patch$recovered, patch$death_rate, dt) +
+    newly_recovered
+  
+  patch
+}
+
 rate_to_probability <- function(rate, dt) {
   
   exp(-rate * dt)
@@ -252,6 +298,68 @@ update_state <- function(state,
     # state[["n_moving"]] <- n_moving
     
     state[["patches"]][[idx]] <- update_patch(patch, dt)
+    
+  }
+  state
+}
+
+# modify function to work this KSA example
+update_ksa_state <- function(state,
+                             dt,
+                             compartments = c("susceptible",
+                                              "exposed",
+                                              "infected",
+                                              "recovered"),
+                             movement_type = c("probability", "rate"), # set default movement type to be prob
+                             relative_movement = c(1, 1, 1, 1)
+) {
+  
+  movement_type <- match.arg(movement_type)
+  
+  n_moving <- get_number_migrating(state, dt, compartments, movement_type, relative_movement)
+  n_patches <- length(state[["patches"]])
+  
+  # Find the sub-patches in KSA using pre-defined ksa_index
+  ksa_patches <- state[["patches"]][ksa_index]
+  
+  # How many infections in KSA at this time, across all sub-patches
+  ksa_infections <- ksa_patches %>% 
+    map_dbl(~ .x$infected) %>% 
+    reduce(`+`)
+  
+  # How many people in KSA at this time, across all sub-patches
+  ksa_total <- ksa_patches %>%
+    map_dbl(~ sum(pluck(.x, "susceptible"), pluck(.x, "exposed"),
+                  pluck(.x, "infected"), pluck(.x, "recovered"))) %>%
+    reduce(`+`)
+  
+  # What is ksa exposure rate, calculated across all sub-patches
+  ksa_transmission_rate <- ksa_patches[[1]]$transmission_rate  # same for all so can extract form patch 1 only
+  
+  ksa_exposure_rate <- ifelse(ksa_total > 0,
+                              ksa_transmission_rate * ksa_infections / ksa_total,
+                              0)
+  
+  for (idx in seq_len(n_patches)) {
+    
+    patch <- state[["patches"]][[idx]]
+    
+    for (compartment in compartments) {
+      patch[[compartment]] <- patch[[compartment]] -
+        to_other_patches(n_moving[[compartment]],  idx) +
+        from_other_patches(n_moving[[compartment]], idx)
+      
+    }
+    
+    # state[["n_moving"]] <- n_moving
+    # browser()
+    if (idx %in% ksa_index) {
+      # this modified function uses the pre-specified exposure rate for KSA sub-patches
+      # this was computed above
+      state[["patches"]][[idx]] <- update_ksa_patch(patch, dt, ksa_exposure_rate)
+    } else {
+      state[["patches"]][[idx]] <- update_patch(patch, dt)
+    }
     
   }
   state
