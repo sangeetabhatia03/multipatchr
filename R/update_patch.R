@@ -12,7 +12,18 @@ to_next_compartment <- function(n_current, rate, dt) {
   
   prob <- 1 - rate_to_probability(rate, dt)
   
-  stats::rbinom(1, size = n_current, prob = prob)
+  out <- stats::rbinom(1, size = n_current, prob = prob)
+  
+  if (is.na(out)) {
+    
+    # arg_values <- lapply(substitute(list(n_current, rate, dt)), deparse)
+    # print(arg_values)
+    # print(paste0(
+      # "Number=", n_current, "; Prob=", prob))
+    stop("Value moving to compartment cannot be NA", call. = FALSE)
+  }
+  
+  out
   
 }
 
@@ -62,7 +73,6 @@ update_patch <- function(patch, dt) {
     newly_recovered -
     deaths(patch$infected, patch$death_rate, dt) +
     newly_infected
-  
   
   patch$recovered <- patch$recovered -
     deaths(patch$recovered, patch$death_rate, dt) +
@@ -190,8 +200,8 @@ get_number_migrating <- function(state, dt, compartments, movement_type, relativ
     prop_compartments <- c(prop_s[i], prop_e[i], prop_i[i], prop_r[i])
     
     # Get the proportion of people moving to each destination from origin i
-    # This allows us to distribute the movers accordingly when we have small
-    # numbers of movers.
+    # This can allows us to distribute the movers accordingly when we have small
+    # numbers of movers (not currently needed).
     prop_movers <- state$movement_rate[i,] / sum(state$movement_rate[i,])
     
     if(sum_compartments[i] < sum(state$movement_rate[i,])) {
@@ -213,13 +223,34 @@ get_number_migrating <- function(state, dt, compartments, movement_type, relativ
       if(sum_compartments[i] >= sum(state$movement_rate[i,])) {
         n_movers <- state$movement_rate[i,j]
       } else {
-        n_movers <- all_movers[j] # TO DO: how can we edit this so that the final people are able to move?
-        # we will need this in our model because we want all pilgrims to leave KSA after Hajj.]
+        n_movers <- all_movers[j]
       }
       
       if(n_movers != 0) {
         out[i,j,] <- stats::rmultinom(n = 1, size = n_movers, prob = prop_compartments)
-      } else {
+        
+        max_compartment_values <- c(state$patches[[i]]$susceptible,
+                                    state$patches[[i]]$exposed,
+                                    state$patches[[i]]$infected,
+                                    state$patches[[i]]$recovered)
+        
+        # Re-run the multinomial draw if any of the movement numbers exceed people in that compartment
+        # This is an imperfect solution, but the problem only occurs in the final movement stage, so does not have substantial effect on results
+        
+        n <- 1 # set counter for monitoring number of re-draws needed
+        
+        while(sum(out[i,j,] > max_compartment_values) > 0) {
+          
+          warning(paste0(
+            "In draw ", n, " the randomly drawn movers exceeded the number
+            of people in one of the compartments. Another draw was made."
+          ))
+          n <- n + 1 # counter to see how many times we re-draw
+          out[i,j,] <- stats::rmultinom(n = 1, size = n_movers, prob = prop_compartments)
+          
+        }
+        
+       } else {
         out[i,j,] <- c(0,0,0,0)
       }
     }
@@ -339,7 +370,7 @@ update_ksa_state <- function(state,
   ksa_exposure_rate <- ifelse(ksa_total > 0,
                               ksa_transmission_rate * ksa_infections / ksa_total,
                               0)
-  
+  # browser()
   for (idx in seq_len(n_patches)) {
     
     patch <- state[["patches"]][[idx]]
@@ -351,8 +382,6 @@ update_ksa_state <- function(state,
       
     }
     
-    # state[["n_moving"]] <- n_moving
-    # browser()
     if (idx %in% ksa_index) {
       # this modified function uses the pre-specified exposure rate for KSA sub-patches
       # this was computed above
