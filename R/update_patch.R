@@ -454,6 +454,206 @@ get_number_migrating_symptoms <- function(state, dt, compartments, movement_type
   n_patches <- length(state[["patches"]])
   
   n_compartments <- length(compartments)
+
+    # Extract the "patches" sublist
+  patches_list <- state[["patches"]]
+  
+  # Use sapply to sum the first six elements (i.e. compartments) from each sublist
+  sum_compartments <- sapply(patches_list, function(sublist) sum(unlist(sublist[compartments])))
+  
+  # Use conditional statement here
+  # This is dummy code: stops us getting an error for NA for proportions if sum_compartments == 0
+  # Also need to set n_movers==0 below so that we do not move anybody else
+  # To do in future: find a way to set these more dynamically
+  
+  numbers_in_compartments <- vector(mode = "list", length = n_compartments)
+  names(numbers_in_compartments) <- compartments
+  
+  proportions_in_compartments <- vector(mode = "list", length = n_compartments)
+  names(proportions_in_compartments) <- compartments
+  
+  for (compartment in compartments) {
+    
+    numbers_in_compartments[[compartment]] <- sapply(state[["patches"]], '[[', compartment)
+    
+    proportions_in_compartments[[compartment]] <- ifelse(sum_compartments == 0,
+                                                         1/n_compartments,
+                                                         sapply(state[["patches"]], '[[', compartment) / sum_compartments)
+    
+  }
+  
+  # prop_s <- ifelse(sum_compartments == 0,
+  #                  1/n_compartments,
+  #                  sapply(state[["patches"]], '[[', "susceptible") / sum_compartments)
+  # prop_e <- ifelse(sum_compartments == 0,
+  #                  1/n_compartments,
+  #                  sapply(state[["patches"]], '[[', "exposed") / sum_compartments)
+  # prop_i_a <- ifelse(sum_compartments == 0,
+  #                    1/n_compartments,
+  #                  sapply(state[["patches"]], '[[', "infected_asymptomatic") / sum_compartments)
+  # prop_i_p <- ifelse(sum_compartments == 0,
+  #                    1/n_compartments,
+  #                    sapply(state[["patches"]], '[[', "infected_presymptomatic") / sum_compartments)
+  # prop_i_s <- ifelse(sum_compartments == 0,
+  #                    1/n_compartments,
+  #                    sapply(state[["patches"]], '[[', "infected_symptomatic") / sum_compartments)
+  # prop_r <- ifelse(sum_compartments == 0,
+  #                  1/n_compartments,
+  #                  sapply(state[["patches"]], '[[', "recovered") / sum_compartments)
+  
+  out <- array(0, dim = c(n_patches, n_patches, n_compartments))
+  
+  for (i in seq_len(n_patches)) {
+    
+    # Extract the numbers and compartment proportions for this patch
+    patch_number_compartments <- sapply(numbers_in_compartments, `[`, i)
+    patch_prop_compartments <- sapply(proportions_in_compartments, `[`, i)
+    # prop_compartments <- c(prop_s[i], prop_e[i], prop_i_a[i],
+    #                        prop_i_p[i], prop_i_s[i], prop_r[i])
+    
+    # Get the proportion of people moving to each destination from origin i
+    # This can allows us to distribute the movers accordingly when we have small
+    # numbers of movers (not currently needed).
+    prop_movers <- state$movement_rate[i,] / sum(state$movement_rate[i,])
+    
+    if(sum_compartments[i] < sum(state$movement_rate[i,])) {
+      
+      all_movers <- stats::rmultinom(n = 1,
+                                     size = sum_compartments[i],
+                                     prob = prop_movers)
+      
+    }
+    
+    for (j in seq_len(n_patches)) {
+      
+      # Some code to handle the occasions where we have fewer people in a patch than we expect to move
+      # In this model, movement from an origin will only be to a single destination, so
+      # distributing the last remaining movers between different j values is not essential. But I
+      # have set the code up so that it should be able to handle other versions where we have
+      # two destinations.
+      
+      if(sum_compartments[i] >= sum(state$movement_rate[i,])) {
+        # when there are enough people in a patch/sub-patch, we move the fixed number denoted in movement_rate
+        n_movers <- state$movement_rate[i,j]
+      } else {
+        # when we do not have enough ppl in compartment we use the numbers defined above
+        n_movers <- all_movers[j]
+      }
+      
+      if(n_movers != 0) {
+        
+        # Numbers in individual compartments
+        people_in_compartments <- patch_number_compartments
+        
+        #Total number of people
+        total_people <- sum(patch_number_compartments)
+        
+        # Calculate probabilities for sampling from each category
+        probabilities <- people_in_compartments / total_people
+        
+        # Initialize a vector to store the compartments of the sampled movers
+        sampled_movers <- character(n_movers)
+        
+        # Perform sampling without replacement
+        for (each_mover in 1:n_movers) {
+          # Sample a category based on probabilities
+          sampled_compartment <- sample(names(people_in_compartments), 1, prob = probabilities)
+          
+          # Check if there are people left in the sampled compartment
+          while (people_in_compartments[sampled_compartment] == 0) {
+            sampled_compartment <- sample(names(people_in_compartments), 1, prob = probabilities)
+          }
+          
+          # Reduce the count of people in the sampled compartment
+          people_in_compartments[sampled_compartment] <- people_in_compartments[sampled_compartment] - 1
+          
+          # Store the sampled category
+          sampled_movers[each_mover] <- sampled_compartment
+        }
+        
+        sampled_movers_factor <- factor(sampled_movers, levels = compartments)
+        sampled_counts <- as.vector(table(sampled_movers_factor))
+        
+        out[i,j,] <- sampled_counts
+        
+        # browser()
+        
+        # out[i,j,] <- stats::rmultinom(n = 1, size = n_movers, prob = prop_compartments)
+        # 
+        # max_compartment_values <- c(state$patches[[i]]$susceptible,
+        #                             state$patches[[i]]$exposed,
+        #                             state$patches[[i]]$infected_a,
+        #                             state$patches[[i]]$infected_p,
+        #                             state$patches[[i]]$infected_s,
+        #                             state$patches[[i]]$recovered)
+        # 
+        # # Re-run the multinomial draw if any of the movement numbers exceed people in that compartment
+        # # This is an imperfect solution, but the problem only occurs in the final movement stage, so does not have substantial effect on results
+        # 
+        # n <- 1 # set counter for monitoring number of re-draws needed
+        # 
+        # while(sum(out[i,j,] > max_compartment_values) > 0) {
+        #   
+        #   warning(paste0(
+        #     "In draw ", n, " the randomly drawn movers exceeded the number
+        #     of people in one of the compartments. Another draw was made."
+        #   ))
+        #   n <- n + 1 # counter to see how many times we re-draw
+        #   out[i,j,] <- stats::rmultinom(n = 1, size = n_movers, prob = prop_compartments)
+        #   
+        # }
+        
+      } else {
+        # This is for times where n_movers is zero
+        out[i,j,] <- rep(0, times = n_compartments)
+      }
+    }
+  }
+  
+  # convert array to a list of n elements, 1 per compartment
+  n_moving <- lapply(1:dim(out)[3], function(i) array(out[, , i], dim = dim(out)[1:2]))
+  names(n_moving) <- compartments
+  n_moving
+  
+}
+
+get_number_migrating_symptoms_copy <- function(state, dt, compartments, movement_type, relative_movement) {
+  
+  if (movement_type == "rate") {
+    
+    pmat <- 1 - rate_to_probability(state$movement_rate, dt)
+    
+  } else {
+    
+    pmat <- state$movement_rate
+    
+  }
+  
+  # *** Not currently using this variation of the code, but can be added back in
+  
+  ## Include any compartment effects on movement
+  ## e.g. infected people might move less than others
+  # compartment_moving <- purrr::imap(compartments, function(comp, index) {
+  #
+  #   out <- pmat * relative_movement[index]
+  #   diag(out) <- 0
+  #   diag(out) <- 1 - rowSums(out)
+  #   diag(out)[diag(out) < 0] <- 0  # to correct floating-point errors that can occur
+  #   out
+  #
+  # })
+  #
+  # names(compartment_moving) <- compartments
+  
+  ## For each compartment, get the number of people moving in and
+  ## out of patches.
+  # n_moving <- vector(
+  #   mode = "list", length = length(compartments)
+  # )
+  # names(n_moving) <- compartments
+  n_patches <- length(state[["patches"]])
+  
+  n_compartments <- length(compartments)
   
   # Extract the "patches" sublist
   patches_list <- state[["patches"]]
@@ -473,7 +673,7 @@ get_number_migrating_symptoms <- function(state, dt, compartments, movement_type
                    sapply(state[["patches"]], '[[', "exposed") / sum_compartments)
   prop_i_a <- ifelse(sum_compartments == 0,
                      1/n_compartments,
-                   sapply(state[["patches"]], '[[', "infected_asymptomatic") / sum_compartments)
+                     sapply(state[["patches"]], '[[', "infected_asymptomatic") / sum_compartments)
   prop_i_p <- ifelse(sum_compartments == 0,
                      1/n_compartments,
                      sapply(state[["patches"]], '[[', "infected_presymptomatic") / sum_compartments)
