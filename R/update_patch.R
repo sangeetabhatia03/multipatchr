@@ -429,28 +429,6 @@ get_number_migrating_symptoms <- function(state, dt, compartments, movement_type
     
   }
   
-  # *** Not currently using this variation of the code, but can be added back in
-  
-  ## Include any compartment effects on movement
-  ## e.g. infected people might move less than others
-  # compartment_moving <- purrr::imap(compartments, function(comp, index) {
-  #
-  #   out <- pmat * relative_movement[index]
-  #   diag(out) <- 0
-  #   diag(out) <- 1 - rowSums(out)
-  #   diag(out)[diag(out) < 0] <- 0  # to correct floating-point errors that can occur
-  #   out
-  #
-  # })
-  #
-  # names(compartment_moving) <- compartments
-  
-  ## For each compartment, get the number of people moving in and
-  ## out of patches.
-  # n_moving <- vector(
-  #   mode = "list", length = length(compartments)
-  # )
-  # names(n_moving) <- compartments
   n_patches <- length(state[["patches"]])
   
   n_compartments <- length(compartments)
