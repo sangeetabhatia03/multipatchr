@@ -214,7 +214,7 @@ patch_symptoms <- function(s_patch,
 ##' Constructor for patch class
 ##'
 ##' Build a patch with seir compartments, including (a/pre-)symptomatic compartments,
-##' and patch-specific birth and death rates
+##' compartments for diagnosed individuals, and patch-specific birth and death rates
 ##'
 ##' @param s_patch Number of susceptible individuals in patch
 ##' @param e_patch Number of exposed individuals in patch
@@ -226,6 +226,7 @@ patch_symptoms <- function(s_patch,
 ##' @param i_a_diag_patch Number of diagnosed asymptomatic infected individuals in patch
 ##' @param i_p_diag_patch Number of diagnosed presymptomatic infected individuals in patch
 ##' @param i_s_diag_patch Number of diagnosed symptomatic infected individuals in patch
+##' @param r_diag_patch Number of diagnosed recovered individuals in patch
 ##' @param birth_rate Birth rate for this patch. Number of births per unit time
 ##' @param death_rate Death rate for this patch. Number of deaths per unit time in this patch
 ##' @param transmission_rate effective contact rate
@@ -252,6 +253,7 @@ patch_symptoms <- function(s_patch,
 ##' ** infected_symptomatic ** Number of symptomatic infected individuals in this patch
 ##' ** infected_symptomatic_diagnosed ** Number of diagnosed symptomatic infected individuals in this patch
 ##' ** recovered ** Number of recovered individuals in this patch
+##' ** recovered_diagnosed ** Number of diagnosed recovered individuals in this patch
 ##' ** birth_rate ** Patch-specific birth rate
 ##' ** death_rate ** Patch-specific death rate
 ##' ** transmission_rate ** Effective contact rate for this patch
@@ -275,6 +277,7 @@ patch_symptoms_testing <- function(s_patch,
                                    i_a_diag_patch,
                                    i_p_diag_patch,
                                    i_s_diag_patch,
+                                   r_diag_patch,
                                    birth_rate,
                                    death_rate,
                                    transmission_rate,
@@ -288,7 +291,7 @@ patch_symptoms_testing <- function(s_patch,
                                    testing_rate) {
   args <- list(
     s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch, r_patch,
-    e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch,
+    e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch, r_diag_patch,
     birth_rate, death_rate, transmission_rate,
     asymptomatic_infectiousness, presymptomatic_infectiousness,
     prop_symptomatic, infection_rate, symptom_rate,
@@ -309,13 +312,14 @@ patch_symptoms_testing <- function(s_patch,
   ## an integer, else rbinom will generate NAs.
   are_integers <- sapply(
     c(s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch, r_patch,
-      e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch),
+      e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch, r_diag_patch),
     function(x) all.equal(x, as.integer(x))
   )
   
   are_positive <- c(s_patch, e_patch,
                     i_a_patch, i_p_patch, i_s_patch, r_patch,
-                    e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch) >= 0
+                    e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch,
+                    r_diag_patch) >= 0
   
   stopifnot(all(are_positive))
   
@@ -336,7 +340,7 @@ patch_symptoms_testing <- function(s_patch,
     i_a_diag_patch <- ceiling(i_a_diag_patch)
     i_p_diag_patch <- ceiling(i_p_diag_patch)
     i_s_diag_patch <- ceiling(i_s_diag_patch)
-    # r_diag_patch <- ceiling(r_diag_patch)
+    r_diag_patch <- ceiling(r_diag_patch)
     
   }
   
@@ -351,7 +355,7 @@ patch_symptoms_testing <- function(s_patch,
     infected_symptomatic = i_s_patch,
     infected_symptomatic_diagnosed = i_s_diag_patch,
     recovered = r_patch,
-    # recovered_diagnosed = r_diag_patch,
+    recovered_diagnosed = r_diag_patch,
     birth_rate = birth_rate,
     death_rate = death_rate,
     transmission_rate = transmission_rate,
