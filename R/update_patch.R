@@ -220,6 +220,11 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate) {
     )
   }
   
+  # First apply transitions to diagnosed compartments
+  patch <- update_ksa_patch_screening(patch, dt)
+  
+  # Now apply transitions to undiagnosed compartments
+  
   exposure_rate <- patch_exposure_rate
   
   newly_exposed <- to_next_compartment(
@@ -1099,7 +1104,7 @@ update_ksa_state_symptoms_screening <- function(state,
       # this first modified function uses the pre-specified exposure rate for KSA sub-patches
       # this was computed above
       state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, ksa_exposure_rate)
-      state[["patches"]][[idx]] <- update_ksa_patch_screening(patch, dt)
+      # state[["patches"]][[idx]] <- update_ksa_patch_screening(patch, dt)
     } else {
       state[["patches"]][[idx]] <- update_patch_symptoms(patch, dt)
     }
