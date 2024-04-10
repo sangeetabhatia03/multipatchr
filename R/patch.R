@@ -104,7 +104,10 @@ patch <- function(s_patch,
 ##' @param transmission_rate effective contact rate
 ##' @param asymptomatic_infectiousness Proportion giving 
 ##' the infectivity of asymptomatic cases relative to
-##' pre-symptomatic and symptomatic cases.
+##' symptomatic cases.
+##' @param presymptomatic_infectiousness Proportion giving 
+##' the infectivity of presymptomatic cases relative to
+##' symptomatic cases.
 ##' @param prop_symptomatic Proportion of cases that are symptomatic.
 ##' @param infection_rate rate of moving from compartment E to I
 ##' @param symptom_rates Rate of moving from I_presymptomatic to I_symptomatic.
@@ -121,6 +124,7 @@ patch <- function(s_patch,
 ##' ** death_rate ** Patch-specific death rate
 ##' ** transmission_rate ** Effective contact rate for this patch
 ##' ** asymptomatic_infectiousness ** Relative infectivity of asymptomatic infected individuals
+##' ** presymptomatic_infectiousness ** Relative infectivity of presymptomatic infected individuals
 ##' ** prop_symptomatic ** Proportion of infections with symptoms
 ##' ** Infection rate ** Rate at which individuals move from E to I_a or I_p
 ##' ** Symptom rate ** Rate at which individuals move from I_p to I_s
@@ -139,6 +143,7 @@ patch_symptoms <- function(s_patch,
                   death_rate,
                   transmission_rate,
                   asymptomatic_infectiousness,
+                  presymptomatic_infectiousness,
                   prop_symptomatic,
                   infection_rate,
                   symptom_rate,
@@ -147,7 +152,7 @@ patch_symptoms <- function(s_patch,
   args <- list(
     s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch, r_patch,
     birth_rate, death_rate, transmission_rate, asymptomatic_infectiousness,
-    prop_symptomatic, infection_rate, symptom_rate,
+    presymptomatic_infectiousness, prop_symptomatic, infection_rate, symptom_rate,
     recovery_rate_asym, recovery_rate_sym
   )
   
@@ -200,6 +205,7 @@ patch_symptoms <- function(s_patch,
     death_rate = death_rate,
     transmission_rate = transmission_rate,
     asymptomatic_infectiousness = asymptomatic_infectiousness,
+    presymptomatic_infectiousness = presymptomatic_infectiousness,
     prop_symptomatic = prop_symptomatic,
     infection_rate = infection_rate,
     symptom_rate = symptom_rate,
@@ -258,6 +264,7 @@ patch_symptoms <- function(s_patch,
 ##' ** death_rate ** Patch-specific death rate
 ##' ** transmission_rate ** Effective contact rate for this patch
 ##' ** asymptomatic_infectiousness ** Relative infectivity of asymptomatic infected individuals
+##' ** presymptomatic_infectiousness ** Relative infectivity of presymptomatic infected individuals
 ##' ** prop_symptomatic ** Proportion of infections with symptoms
 ##' ** Infection rate ** Rate at which individuals move from E to I_a or I_p
 ##' ** Symptom rate ** Rate at which individuals move from I_p to I_s

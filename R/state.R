@@ -169,7 +169,10 @@ state <- function(s_patches,
 ##' rate
 ##' @param asymptomatic_infectiousness Vector of proportions that 
 ##' give the infectivity of asymptomatic cases relative to
-##' pre-symptomatic and symptomatic cases.
+##' symptomatic cases.
+##' @param presymptomatic_infectiousness Vector of proportions that 
+##' give the infectivity of presymptomatic cases relative to
+##' symptomatic cases.
 ##' @param prop_symptomatic Vector of patch-specific proportion
 ##' of cases that are symptomatic
 ##' @param infection_rates Vector of patch-specific infection rate
@@ -205,6 +208,7 @@ state_symptoms <- function(s_patches,
                   death_rates,
                   transmission_rates,
                   asymptomatic_infectiousness,
+                  presymptomatic_infectiousness,
                   prop_symptomatic,
                   infection_rates,
                   symptom_rates,
@@ -224,6 +228,7 @@ state_symptoms <- function(s_patches,
     death_rates = death_rates,
     transmission_rates = transmission_rates,
     asymptomatic_infectiousness = asymptomatic_infectiousness,
+    presymptomatic_infectiousness = presymptomatic_infectiousness,
     prop_symptomatic = prop_symptomatic,
     infection_rates = infection_rates,
     symptom_rates = symptom_rates,
@@ -288,6 +293,7 @@ state_symptoms <- function(s_patches,
       death_rate = patch_args$death_rates,
       transmission_rate = patch_args$transmission_rates,
       asymptomatic_infectiousness = patch_args$asymptomatic_infectiousness,
+      presymptomatic_infectiousness = patch_args$presymptomatic_infectiousness,
       prop_symptomatic = patch_args$prop_symptomatic,
       infection_rate = patch_args$infection_rates,
       symptom_rate = patch_args$symptom_rates,
