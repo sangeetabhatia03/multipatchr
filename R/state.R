@@ -354,6 +354,8 @@ state_symptoms <- function(s_patches,
 ##' diagnosed symptomatic infected in each patch
 ##' @param r_patches Vector of number of
 ##' recovered in each patch
+##' @param r_diag_patches Vector of number of
+##' diagnosed recovered in each patch
 ##' @param birth_rates patch-specific birth rates
 ##' @param death_rates patch-specific death rates
 ##' @param transmission_rates Vector of patch-specific transmission

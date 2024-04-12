@@ -110,9 +110,9 @@ patch <- function(s_patch,
 ##' symptomatic cases.
 ##' @param prop_symptomatic Proportion of cases that are symptomatic.
 ##' @param infection_rate rate of moving from compartment E to I
-##' @param symptom_rates Rate of moving from I_presymptomatic to I_symptomatic.
-##' @param recovery_rates_asym Rate of moving from I_asymtpomatic to recovered
-##' @param recovery_rates_sym Rate of moving from I_symtpomatic to recovered
+##' @param symptom_rate Rate of moving from I_presymptomatic to I_symptomatic.
+##' @param recovery_rate_asym Rate of moving from I_asymtpomatic to recovered
+##' @param recovery_rate_sym Rate of moving from I_symtpomatic to recovered
 ##' @return a list of class patch which has the following items
 ##' ** susceptible ** Number of susceptibles in this patch
 ##' ** exposed ** Number of exposed individuals in this patch
@@ -128,8 +128,8 @@ patch <- function(s_patch,
 ##' ** prop_symptomatic ** Proportion of infections with symptoms
 ##' ** Infection rate ** Rate at which individuals move from E to I_a or I_p
 ##' ** Symptom rate ** Rate at which individuals move from I_p to I_s
-##' ** Asymtpomatic recovery rate ** Rate at which individuals move from  I_a to R.
-##' ** Symtpomatic recovery rate ** Rate at which individuals move from  I_s to R.
+##' ** Asymptomatic recovery rate ** Rate at which individuals move from  I_a to R.
+##' ** Symptomatic recovery rate ** Rate at which individuals move from  I_s to R.
 ##' 
 ##' @export
 ##' @author Jack Wardle
@@ -244,9 +244,9 @@ patch_symptoms <- function(s_patch,
 ##' symptomatic cases.
 ##' @param prop_symptomatic Proportion of cases that are symptomatic.
 ##' @param infection_rate rate of moving from compartment E to I
-##' @param symptom_rates Rate of moving from I_presymptomatic to I_symptomatic.
-##' @param recovery_rates_asym Rate of moving from I_asymptomatic to recovered
-##' @param recovery_rates_sym Rate of moving from I_symptomatic to recovered
+##' @param symptom_rate Rate of moving from I_presymptomatic to I_symptomatic.
+##' @param recovery_rate_asym Rate of moving from I_asymptomatic to recovered
+##' @param recovery_rate_sym Rate of moving from I_symptomatic to recovered
 ##' @param testing_rate Proportion of people that are tested
 ##' @return a list of class patch which has the following items
 ##' ** susceptible ** Number of susceptibles in this patch

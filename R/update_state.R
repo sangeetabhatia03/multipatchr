@@ -7,23 +7,23 @@ compute_ksa_exposure_rate <- function(state, ksa_index) {
   # How many symptomatic, pre-symptomatic, and asymptomatic
   # infections in KSA at this time, across all sub-patches
   ksa_infections_symptomatic <- ksa_patches %>%
-    map_dbl(~ .x$infected_symptomatic) %>% 
-    reduce(`+`)
+    purrr::map_dbl(~ .x$infected_symptomatic) %>% 
+    purrr::reduce(`+`)
   
   ksa_infections_presymptomatic <- ksa_patches %>% 
-    map_dbl(~ .x$infected_presymptomatic) %>% 
-    reduce(`+`)
+    purrr::map_dbl(~ .x$infected_presymptomatic) %>% 
+    purrr::reduce(`+`)
   
   ksa_infections_asymptomatic <- ksa_patches %>% 
-    map_dbl(~ .x$infected_asymptomatic) %>% 
-    reduce(`+`)
+    purrr::map_dbl(~ .x$infected_asymptomatic) %>% 
+    purrr::reduce(`+`)
   
   # How many people in KSA at this time, across all sub-patches
   ksa_total <- ksa_patches %>%
-    map_dbl(~ sum(pluck(.x, "susceptible"), pluck(.x, "exposed"),
+    purrr::map_dbl(~ sum(pluck(.x, "susceptible"), pluck(.x, "exposed"),
                   pluck(.x, "infected_asymptomatic"), pluck(.x, "infected_presymptomatic"),
                   pluck(.x, "infected_symptomatic"), pluck(.x, "recovered"))) %>%
-    reduce(`+`)
+    purrr::reduce(`+`)
   
   # What is ksa exposure rate, calculated across all sub-patches
   ksa_transmission_rate <- ksa_patches[[1]]$transmission_rate  # same for all so can extract form patch 1 only
@@ -101,7 +101,8 @@ update_ksa_state <- function(state,
                                               "infected",
                                               "recovered"),
                              movement_type = c("probability", "rate"), # set default movement type to be prob
-                             relative_movement = c(1, 1, 1, 1)
+                             relative_movement = c(1, 1, 1, 1),
+                             ksa_index
 ) {
   
   movement_type <- match.arg(movement_type)
@@ -114,14 +115,14 @@ update_ksa_state <- function(state,
   
   # How many infections in KSA at this time, across all sub-patches
   ksa_infections <- ksa_patches %>% 
-    map_dbl(~ .x$infected) %>% 
-    reduce(`+`)
+    purrr::map_dbl(~ .x$infected) %>% 
+    purrr::reduce(`+`)
   
   # How many people in KSA at this time, across all sub-patches
   ksa_total <- ksa_patches %>%
-    map_dbl(~ sum(pluck(.x, "susceptible"), pluck(.x, "exposed"),
+    purrr::map_dbl(~ sum(pluck(.x, "susceptible"), pluck(.x, "exposed"),
                   pluck(.x, "infected"), pluck(.x, "recovered"))) %>%
-    reduce(`+`)
+    purrr::reduce(`+`)
   
   # What is ksa exposure rate, calculated across all sub-patches
   ksa_transmission_rate <- ksa_patches[[1]]$transmission_rate  # same for all so can extract form patch 1 only
@@ -164,7 +165,8 @@ update_ksa_state_symptoms <- function(state,
                                                        "infected_symptomatic",
                                                        "recovered"),
                                       movement_type = c("probability", "rate"), # set default movement type to be prob
-                                      relative_movement = c(1, 1, 1, 1, 1, 1)
+                                      relative_movement = c(1, 1, 1, 1, 1, 1),
+                                      ksa_index
 ) {
   
   movement_type <- match.arg(movement_type)
@@ -216,7 +218,8 @@ update_ksa_state_screening_incomingphase <- function(state,
                                                                                 "infected_presymptomatic_diagnosed",
                                                                                 "infected_symptomatic_diagnosed"),
                                                      movement_type = c("probability", "rate"), # set default movement type to be prob
-                                                     relative_movement = c(1, 1, 1, 1, 1, 1)
+                                                     relative_movement = c(1, 1, 1, 1, 1, 1),
+                                                     ksa_index
 ) {
   
   movement_type <- match.arg(movement_type)
@@ -236,7 +239,7 @@ update_ksa_state_screening_incomingphase <- function(state,
   
   # for each set of movers, draw from binomial distribution to get number that would be diagnosed
   diagnosed_on_arrival <- lapply(movers_in_tested_compartments, function(mat) {
-    apply(mat, c(1, 2), function(x) rbinom(1, x, test_rate))
+    apply(mat, c(1, 2), function(x) stats::rbinom(1, x, test_rate))
   })
   
   # Create a list that also includes the compartments that were not tested (S, R, etc)
@@ -301,7 +304,8 @@ update_ksa_state_screening_otherphases <- function(state,
                                                                               "infected_presymptomatic_diagnosed",
                                                                               "infected_symptomatic_diagnosed"),
                                                    movement_type = c("probability", "rate"), # set default movement type to be prob
-                                                   relative_movement = c(1, 1, 1, 1, 1, 1)
+                                                   relative_movement = c(1, 1, 1, 1, 1, 1),
+                                                   ksa_index
 ) {
   
   movement_type <- match.arg(movement_type)

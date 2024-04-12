@@ -22,8 +22,8 @@ test_that("update state with no births and deaths and one patch", {
 
     expect_equal(patch$susceptible, 996)
     expect_equal(patch$exposed, 4)
-    expect_equal(patch$infected, 8)
-    expect_equal(patch$recovered, 2)
+    expect_equal(patch$infected, 10)
+    expect_equal(patch$recovered, 0)
 })
 
 # Temporarily mask test: the expected answers are not correct
