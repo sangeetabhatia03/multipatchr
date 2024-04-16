@@ -18,4 +18,5 @@ Suggests:
     covr
 Imports:
     magrittr,
-    purrr
+    purrr,
+    extraDistr

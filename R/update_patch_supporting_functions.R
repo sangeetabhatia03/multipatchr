@@ -16,10 +16,6 @@ to_next_compartment <- function(n_current, rate, dt) {
   
   if (is.na(out)) {
     
-    # arg_values <- lapply(substitute(list(n_current, rate, dt)), deparse)
-    # print(arg_values)
-    # print(paste0(
-    # "Number=", n_current, "; Prob=", prob))
     stop("Value moving to compartment cannot be NA", call. = FALSE)
   }
   
@@ -164,11 +160,10 @@ get_number_migrating_symptoms <- function(state, dt, compartments, movement_type
   # Use sapply to sum across all compartments in each patch
   # Returns a vector of the total people in each patch
   sum_compartments <- sapply(patches_list, function(sublist) sum(unlist(sublist[compartments])))
-
-    # Use conditional statement here
+  
+  # Use conditional statement here
   # This is a bit of a fudge: stops us getting an error for NA for proportions if sum_compartments == 0
   # Also need to set n_movers==0 below so that we do not move anybody else
-  # To do in future: find a way to set these more dynamically
   
   numbers_in_compartments <- vector(mode = "list", length = n_compartments)
   names(numbers_in_compartments) <- compartments
@@ -201,9 +196,10 @@ get_number_migrating_symptoms <- function(state, dt, compartments, movement_type
     
     # Get the proportion of people moving to each destination from origin i
     # This can allows us to distribute the movers accordingly when we have small
-    # numbers of movers (not currently needed).
+    # numbers of movers (not currently needed as we only have single destinations -
+    # depending on model phase these are KSA or home)
     prop_movers <- state$movement_rate[i,] / sum(state$movement_rate[i,])
-    # browser()
+    
     if(sum_compartments[i] < sum(state$movement_rate[i,])) {
       
       all_movers <- stats::rmultinom(n = 1,
@@ -239,68 +235,22 @@ get_number_migrating_symptoms <- function(state, dt, compartments, movement_type
         # Calculate probabilities for sampling from each category
         probabilities <- people_in_compartments / total_people
         
-        # Initialize a vector to store the compartments of the sampled movers
-        sampled_movers <- character(n_movers)
+        # Draw from hypergeometric distribution to get the compartments of our movers
+        # https://search.r-project.org/CRAN/refmans/extraDistr/html/MultiHypergeometric.html
+        out[i,j,] <- extraDistr::rmvhyper(1, people_in_compartments, n_movers)
         
-        # Perform sampling without replacement for each mover
-        for (each_mover in 1:n_movers) {
-          # Sample a compartment based on probabilities
-          sampled_compartment <- sample(names(people_in_compartments), 1, prob = probabilities)
-          
-          # Check if there are people left in the sampled compartment. If not, re-sample.
-          while (people_in_compartments[sampled_compartment] == 0) {
-            sampled_compartment <- sample(names(people_in_compartments), 1, prob = probabilities)
-          }
-          
-          # Reduce the count of people in the sampled compartment
-          people_in_compartments[sampled_compartment] <- people_in_compartments[sampled_compartment] - 1
-          
-          # Store the sampled category
-          sampled_movers[each_mover] <- sampled_compartment
-        }
-        
-        sampled_movers_factor <- factor(sampled_movers, levels = compartments)
-        sampled_counts <- as.vector(table(sampled_movers_factor))
-        
-        out[i,j,] <- sampled_counts
-        
-        # out[i,j,] <- stats::rmultinom(n = 1, size = n_movers, prob = prop_compartments)
-        # 
-        # max_compartment_values <- c(state$patches[[i]]$susceptible,
-        #                             state$patches[[i]]$exposed,
-        #                             state$patches[[i]]$infected_a,
-        #                             state$patches[[i]]$infected_p,
-        #                             state$patches[[i]]$infected_s,
-        #                             state$patches[[i]]$recovered)
-        # 
-        # # Re-run the multinomial draw if any of the movement numbers exceed people in that compartment
-        # # This is an imperfect solution, but the problem only occurs in the final movement stage, so does not have substantial effect on results
-        # 
-        # n <- 1 # set counter for monitoring number of re-draws needed
-        # 
-        # while(sum(out[i,j,] > max_compartment_values) > 0) {
-        #   
-        #   warning(paste0(
-        #     "In draw ", n, " the randomly drawn movers exceeded the number
-        #     of people in one of the compartments. Another draw was made."
-        #   ))
-        #   n <- n + 1 # counter to see how many times we re-draw
-        #   out[i,j,] <- stats::rmultinom(n = 1, size = n_movers, prob = prop_compartments)
-        #   
-        # }
-        
-      } else {
-        # This is for times where n_movers is zero
-        out[i,j,] <- rep(0, times = n_compartments)
-      }
+    } else {
+      # This is for times where n_movers is zero
+      out[i,j,] <- rep(0, times = n_compartments)
     }
   }
-  
-  # convert array to a list of n elements, 1 per compartment
-  n_moving <- lapply(1:dim(out)[3], function(i) array(out[, , i], dim = dim(out)[1:2]))
-  names(n_moving) <- compartments
-  n_moving
-  
+}
+
+# convert array to a list of n elements, 1 per compartment
+n_moving <- lapply(1:dim(out)[3], function(i) array(out[, , i], dim = dim(out)[1:2]))
+names(n_moving) <- compartments
+n_moving
+
 }
 
 ## n_moving is a matrix such that n_moving[i, j] is the
