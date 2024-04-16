@@ -217,6 +217,8 @@ update_ksa_state_screening_incomingphase <- function(state,
                                                                                 "infected_asymptomatic_diagnosed",
                                                                                 "infected_presymptomatic_diagnosed",
                                                                                 "infected_symptomatic_diagnosed"),
+                                                     false_diagnosis_compartments = c("susceptible_false_positive",
+                                                                                      "recovered_false_positive"),
                                                      movement_type = c("probability", "rate"), # set default movement type to be prob
                                                      relative_movement = c(1, 1, 1, 1, 1, 1),
                                                      ksa_index
@@ -242,15 +244,33 @@ update_ksa_state_screening_incomingphase <- function(state,
     apply(mat, c(1, 2), function(x) stats::rbinom(1, x, test_rate))
   })
   
-  # Create a list that also includes the compartments that were not tested (S, R, etc)
-  # use this to record which of the movers need to go to test compartments
-  diagnosed_all <- lapply(n_moving, function(mat) {
-    apply(mat, c(1, 2), function(x) 0L)
+  # We can also get some pilgrims in S or R who are falsely diagnosed on arrival
+  # We assume a certain false positive rate that depends on the test specificity and
+  # apply a binomial draw as above
+  
+  compartment_sources_of_false_positives <- c("susceptible", "recovered")
+  
+  movers_in_false_pos_compartments <- n_moving[compartment_sources_of_false_positives]
+  
+  # single testing rate in all patches at the moment so we just extract from one of the patches
+  false_positive_rate <- state[["patches"]][[1]][["false_positive_rate"]]
+  
+  falsely_diagnosed_on_arrival <- lapply(movers_in_false_pos_compartments, function(mat) {
+    apply(mat, c(1, 2), function(x) stats::rbinom(1, x, false_positive_rate))
   })
   
-  for (name in names(diagnosed_on_arrival)) {
-    diagnosed_all[[name]] <- diagnosed_on_arrival[[name]]
-  }
+  diagnoses_on_arrival <- c(diagnosed_on_arrival, falsely_diagnosed_on_arrival)
+  
+  # No longer need the next section of code as we test all compartments
+  # # Create a list that also includes any compartments that were not tested (S, R, etc)
+  # # use this to record which of the movers need to go to test compartments
+  # diagnosed_all <- lapply(n_moving, function(mat) {
+  #   apply(mat, c(1, 2), function(x) 0L)
+  # })
+  # 
+  # for (name in names(diagnosed_on_arrival)) {
+  #   diagnosed_all[[name]] <- diagnosed_on_arrival[[name]]
+  # }
   
   n_patches <- length(state[["patches"]])
   
@@ -265,13 +285,19 @@ update_ksa_state_screening_incomingphase <- function(state,
       patch[[compartment]] <- patch[[compartment]] -
         to_other_patches(n_moving[[compartment]],  idx) +
         from_other_patches(n_moving[[compartment]], idx) -
-        from_other_patches(diagnosed_all[[compartment]], idx) # diagnosed cases will go to separate compartments
+        from_other_patches(diagnoses_on_arrival[[compartment]], idx) # diagnosed cases will go to separate compartments
     }
     
     for (compartment in screening_compartments) {
       undiagnosed_compartment <- sub("_diagnosed$", "", compartment)
       patch[[compartment]] <- patch[[compartment]] +
-        from_other_patches(diagnosed_all[[undiagnosed_compartment]], idx) # screened cases
+        from_other_patches(diagnoses_on_arrival[[undiagnosed_compartment]], idx) # screened cases
+    }
+    
+    for (compartment in false_diagnosis_compartments) {
+      unscreened_compartment <- sub("_false_positive$", "", compartment)
+      patch[[compartment]] <- patch[[compartment]] +
+        from_other_patches(diagnoses_on_arrival[[unscreened_compartment]], idx) # screened cases
     }
     
     # Step 2. Update disease states.
@@ -367,6 +393,91 @@ update_ksa_state_screening_otherphases <- function(state,
       state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, ksa_exposure_rate,
                                                              screening = TRUE)
       # state[["patches"]][[idx]] <- update_ksa_patch_screening(patch, dt)
+    } else {
+      state[["patches"]][[idx]] <- update_patch_symptoms(patch, dt,
+                                                         screening = TRUE)
+    }
+    
+  }
+  state
+}
+
+
+update_ksa_state_screening_incomingphase_copy <- function(state,
+                                                     dt,
+                                                     moving_compartments = c("susceptible",
+                                                                             "exposed",
+                                                                             "infected_asymptomatic",
+                                                                             "infected_presymptomatic",
+                                                                             "infected_symptomatic",
+                                                                             "recovered"),
+                                                     screening_compartments = c("exposed_diagnosed",
+                                                                                "infected_asymptomatic_diagnosed",
+                                                                                "infected_presymptomatic_diagnosed",
+                                                                                "infected_symptomatic_diagnosed"),
+                                                     movement_type = c("probability", "rate"), # set default movement type to be prob
+                                                     relative_movement = c(1, 1, 1, 1, 1, 1),
+                                                     ksa_index
+) {
+  
+  movement_type <- match.arg(movement_type)
+  
+  n_moving <- get_number_migrating_symptoms(state, dt, moving_compartments, movement_type, relative_movement)
+  
+  # Movers arriving in KSA are tested
+  # a proportion (equal to testing_rate) test positive
+  # calculate this by performing binomial draw for each element in matrix
+  tested_compartments <- c("exposed", "infected_asymptomatic",
+                           "infected_presymptomatic", "infected_symptomatic")
+  
+  movers_in_tested_compartments <- n_moving[tested_compartments]
+  
+  # single testing rate at the moment so we just extract from one of the patches
+  test_rate <- state[["patches"]][[1]][["testing_rate"]]
+  
+  # for each set of movers, draw from binomial distribution to get number that would be diagnosed
+  diagnosed_on_arrival <- lapply(movers_in_tested_compartments, function(mat) {
+    apply(mat, c(1, 2), function(x) stats::rbinom(1, x, test_rate))
+  })
+  
+  # Create a list that also includes the compartments that were not tested (S, R, etc)
+  # use this to record which of the movers need to go to test compartments
+  diagnosed_all <- lapply(n_moving, function(mat) {
+    apply(mat, c(1, 2), function(x) 0L)
+  })
+  
+  for (name in names(diagnosed_on_arrival)) {
+    diagnosed_all[[name]] <- diagnosed_on_arrival[[name]]
+  }
+  
+  n_patches <- length(state[["patches"]])
+  
+  ksa_exposure_rate <- compute_ksa_exposure_rate(state, ksa_index)
+  
+  for (idx in seq_len(n_patches)) {
+    
+    patch <- state[["patches"]][[idx]]
+    
+    # Step 1. Move individuals
+    for (compartment in moving_compartments) {
+      patch[[compartment]] <- patch[[compartment]] -
+        to_other_patches(n_moving[[compartment]],  idx) +
+        from_other_patches(n_moving[[compartment]], idx) -
+        from_other_patches(diagnosed_all[[compartment]], idx) # diagnosed cases will go to separate compartments
+    }
+    
+    for (compartment in screening_compartments) {
+      undiagnosed_compartment <- sub("_diagnosed$", "", compartment)
+      patch[[compartment]] <- patch[[compartment]] +
+        from_other_patches(diagnosed_all[[undiagnosed_compartment]], idx) # screened cases
+    }
+    
+    # Step 2. Update disease states.
+    if (idx %in% ksa_index) {
+      # this first modified function uses the pre-specified exposure rate for KSA sub-patches
+      # this was computed above
+      state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, ksa_exposure_rate,
+                                                             screening = TRUE)
     } else {
       state[["patches"]][[idx]] <- update_patch_symptoms(patch, dt,
                                                          screening = TRUE)
