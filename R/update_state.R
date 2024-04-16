@@ -280,7 +280,6 @@ update_ksa_state_screening_incomingphase <- function(state,
       # this was computed above
       state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, ksa_exposure_rate,
                                                              screening = TRUE)
-      # state[["patches"]][[idx]] <- update_ksa_patch_screening(patch, dt)
     } else {
       state[["patches"]][[idx]] <- update_patch_symptoms(patch, dt,
                                                          screening = TRUE)

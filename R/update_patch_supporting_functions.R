@@ -29,6 +29,7 @@ rate_to_probability <- function(rate, dt) {
   
 }
 
+# TO DO: update this
 get_number_migrating <- function(state, dt, compartments, movement_type, relative_movement) {
   
   if (movement_type == "rate") {
@@ -161,7 +162,7 @@ get_number_migrating_symptoms <- function(state, dt, compartments, movement_type
   # Returns a vector of the total people in each patch
   sum_compartments <- sapply(patches_list, function(sublist) sum(unlist(sublist[compartments])))
   
-  # Use conditional statement here
+  # Use conditional statements here to set proportions in compartments
   # This is a bit of a fudge: stops us getting an error for NA for proportions if sum_compartments == 0
   # Also need to set n_movers==0 below so that we do not move anybody else
   
@@ -195,7 +196,7 @@ get_number_migrating_symptoms <- function(state, dt, compartments, movement_type
     patch_prop_compartments <- sapply(proportions_in_compartments, `[`, i)
     
     # Get the proportion of people moving to each destination from origin i
-    # This can allows us to distribute the movers accordingly when we have small
+    # This can allows us to assign the detsinations of movers accordingly when we have small
     # numbers of movers (not currently needed as we only have single destinations -
     # depending on model phase these are KSA or home)
     prop_movers <- state$movement_rate[i,] / sum(state$movement_rate[i,])
@@ -220,7 +221,7 @@ get_number_migrating_symptoms <- function(state, dt, compartments, movement_type
         # when there are enough people in a patch/sub-patch, we move the fixed number denoted in movement_rate
         n_movers <- state$movement_rate[i,j]
       } else {
-        # when we do not have enough ppl in compartment we use the numbers defined above
+        # when we do not have enough ppl in compartment we use the all_movers numbers defined above
         n_movers <- all_movers[j]
       }
       
