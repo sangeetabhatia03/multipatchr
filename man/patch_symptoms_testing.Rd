@@ -6,10 +6,11 @@
 \usage{
 patch_symptoms_testing(s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch,
   r_patch, e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch,
-  r_diag_patch, birth_rate, death_rate, transmission_rate,
-  asymptomatic_infectiousness, presymptomatic_infectiousness, prop_symptomatic,
-  infection_rate, symptom_rate, recovery_rate_asym, recovery_rate_sym,
-  testing_rate)
+  r_diag_patch, s_false_patch, r_false_patch, birth_rate, death_rate,
+  transmission_rate, asymptomatic_infectiousness,
+  presymptomatic_infectiousness, prop_symptomatic, infection_rate,
+  symptom_rate, recovery_rate_asym, recovery_rate_sym, testing_rate,
+  false_positive_rate, isolation_period)
 }
 \arguments{
 \item{s_patch}{Number of susceptible individuals in patch}
@@ -33,6 +34,10 @@ patch_symptoms_testing(s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch,
 \item{i_s_diag_patch}{Number of diagnosed symptomatic infected individuals in patch}
 
 \item{r_diag_patch}{Number of diagnosed recovered individuals in patch}
+
+\item{s_false_patch}{Number of susceptible individuals with false positive test in patch}
+
+\item{r_false_patch}{Number of recovered individuals with false positive test in patch}
 
 \item{birth_rate}{Birth rate for this patch. Number of births per unit time}
 
@@ -59,6 +64,10 @@ symptomatic cases.}
 \item{recovery_rate_sym}{Rate of moving from I_symptomatic to recovered}
 
 \item{testing_rate}{Proportion of people that are tested}
+
+\item{false_positive_rate}{Proportion of tests that return a false positive}
+
+\item{isolation_period}{Average duration of isolation following positive test}
 }
 \value{
 a list of class patch which has the following items
@@ -84,6 +93,8 @@ a list of class patch which has the following items
 ** Asymptomatic recovery rate ** Rate at which individuals move from  I_a to R.
 ** Symptomatic recovery rate ** Rate at which individuals move from  I_s to R.
 ** Testing rate ** Proportion of individuals that are tested.
+** False positive rate ** Proportion of tests that return a false positive.
+** Isolation period ** Average duration of isolation period in days.
 }
 \description{
 Build a patch with seir compartments, including (a/pre-)symptomatic compartments,

@@ -356,6 +356,12 @@ state_symptoms <- function(s_patches,
 ##' recovered in each patch
 ##' @param r_diag_patches Vector of number of
 ##' diagnosed recovered in each patch
+##' @param s_false_patches Vector of number of 
+##' susceptibles in patch with false positive 
+##' test result.
+##' @param r_false_patches Vector of number of 
+##' recovered in patch with false positive 
+##' test result.
 ##' @param birth_rates patch-specific birth rates
 ##' @param death_rates patch-specific death rates
 ##' @param transmission_rates Vector of patch-specific transmission
@@ -376,6 +382,9 @@ state_symptoms <- function(s_patches,
 ##' @param recovery_rates_sym Vector of patch-specific recovery rate
 ##' for symptomatic infections
 ##' @param testing_rates Vector of patch-specific testing rates
+##' @param false_positive_rate Vector of patch-specific false positive rates
+##' @param isolation_period Vector of patch-specific mean duration of 
+##' isolation following positive test
 ##' @param movement_rate M rate of movement between
 ##' patches is defined the rate matrix M where
 ##' m[i, j] is the rate of movement from i to j

@@ -233,6 +233,8 @@ patch_symptoms <- function(s_patch,
 ##' @param i_p_diag_patch Number of diagnosed presymptomatic infected individuals in patch
 ##' @param i_s_diag_patch Number of diagnosed symptomatic infected individuals in patch
 ##' @param r_diag_patch Number of diagnosed recovered individuals in patch
+##' @param s_false_patch Number of susceptible individuals with false positive test in patch
+##' @param r_false_patch Number of recovered individuals with false positive test in patch
 ##' @param birth_rate Birth rate for this patch. Number of births per unit time
 ##' @param death_rate Death rate for this patch. Number of deaths per unit time in this patch
 ##' @param transmission_rate effective contact rate
@@ -248,6 +250,8 @@ patch_symptoms <- function(s_patch,
 ##' @param recovery_rate_asym Rate of moving from I_asymptomatic to recovered
 ##' @param recovery_rate_sym Rate of moving from I_symptomatic to recovered
 ##' @param testing_rate Proportion of people that are tested
+##' @param false_positive_rate Proportion of tests that return a false positive
+##' @param isolation_period Average duration of isolation following positive test
 ##' @return a list of class patch which has the following items
 ##' ** susceptible ** Number of susceptibles in this patch
 ##' ** exposed ** Number of exposed individuals in this patch
@@ -271,6 +275,8 @@ patch_symptoms <- function(s_patch,
 ##' ** Asymptomatic recovery rate ** Rate at which individuals move from  I_a to R.
 ##' ** Symptomatic recovery rate ** Rate at which individuals move from  I_s to R.
 ##' ** Testing rate ** Proportion of individuals that are tested.
+##' ** False positive rate ** Proportion of tests that return a false positive.
+##' ** Isolation period ** Average duration of isolation period in days.
 ##' 
 ##' @export
 ##' @author Jack Wardle
