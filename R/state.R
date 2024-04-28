@@ -382,7 +382,8 @@ state_symptoms <- function(s_patches,
 ##' @param recovery_rates_sym Vector of patch-specific recovery rate
 ##' for symptomatic infections
 ##' @param testing_rates Vector of patch-specific testing rates
-##' @param false_positive_rate Vector of patch-specific false positive rates
+##' @param test_sensitivity Vector of patch-specific test sensitivity
+##' @param test_specificity Vector of patch-specific test specificity
 ##' @param isolation_period Vector of patch-specific mean duration of 
 ##' isolation following positive test
 ##' @param movement_rate M rate of movement between
@@ -425,7 +426,8 @@ state_symptoms_testing <- function(s_patches,
                            recovery_rates_asym,
                            recovery_rates_sym,
                            testing_rates,
-                           false_positive_rate,
+                           test_sensitivity,
+                           test_specificity,
                            isolation_period,
                            movement_rate
 ) {
@@ -455,7 +457,8 @@ state_symptoms_testing <- function(s_patches,
     recovery_rates_asym = recovery_rates_asym,
     recovery_rates_sym = recovery_rates_sym,
     testing_rates = testing_rates,
-    false_positive_rate = false_positive_rate,
+    test_sensitivity = test_sensitivity,
+    test_specificity = test_specificity,
     isolation_period = isolation_period
   )
   
@@ -530,7 +533,8 @@ state_symptoms_testing <- function(s_patches,
       recovery_rate_asym = patch_args$recovery_rates_asym,
       recovery_rate_sym = patch_args$recovery_rates_sym,
       testing_rate = patch_args$testing_rates,
-      false_positive_rate = patch_args$false_positive_rate,
+      test_sensitivity = patch_args$test_sensitivity,
+      test_specificity = patch_args$test_specificity,
       isolation_period = patch_args$isolation_period
     )
     

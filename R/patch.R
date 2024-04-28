@@ -250,7 +250,8 @@ patch_symptoms <- function(s_patch,
 ##' @param recovery_rate_asym Rate of moving from I_asymptomatic to recovered
 ##' @param recovery_rate_sym Rate of moving from I_symptomatic to recovered
 ##' @param testing_rate Proportion of people that are tested
-##' @param false_positive_rate Proportion of tests that return a false positive
+##' @param test_sensitivity Sensitivity of tests
+##' @param test_specificity Specificity of tests
 ##' @param isolation_period Average duration of isolation following positive test
 ##' @return a list of class patch which has the following items
 ##' ** susceptible ** Number of susceptibles in this patch
@@ -275,7 +276,8 @@ patch_symptoms <- function(s_patch,
 ##' ** Asymptomatic recovery rate ** Rate at which individuals move from  I_a to R.
 ##' ** Symptomatic recovery rate ** Rate at which individuals move from  I_s to R.
 ##' ** Testing rate ** Proportion of individuals that are tested.
-##' ** False positive rate ** Proportion of tests that return a false positive.
+##' ** Test sensitivity ** Sensitivity of tests.
+##' ** Test specificity ** Specificity of tests.
 ##' ** Isolation period ** Average duration of isolation period in days.
 ##' 
 ##' @export
@@ -304,7 +306,8 @@ patch_symptoms_testing <- function(s_patch,
                                    recovery_rate_asym,
                                    recovery_rate_sym,
                                    testing_rate,
-                                   false_positive_rate,
+                                   test_sensitivity,
+                                   test_specificity,
                                    isolation_period) {
   args <- list(
     s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch, r_patch,
@@ -312,8 +315,8 @@ patch_symptoms_testing <- function(s_patch,
     s_false_patch, r_false_patch, birth_rate, death_rate, transmission_rate,
     asymptomatic_infectiousness, presymptomatic_infectiousness,
     prop_symptomatic, infection_rate, symptom_rate,
-    recovery_rate_asym, recovery_rate_sym, testing_rate, false_positive_rate,
-    isolation_period
+    recovery_rate_asym, recovery_rate_sym, testing_rate,
+    test_sensitivity, test_specificity, isolation_period
   )
   
   nonnumeric <- unlist(lapply(args, is.numeric))
@@ -390,7 +393,8 @@ patch_symptoms_testing <- function(s_patch,
     recovery_rate_asym = recovery_rate_asym,
     recovery_rate_sym = recovery_rate_sym,
     testing_rate = testing_rate,
-    false_positive_rate = false_positive_rate,
+    test_sensitivity = test_sensitivity,
+    test_specificity = test_specificity,
     isolation_period = isolation_period
   )
   class(out) <- "patch"

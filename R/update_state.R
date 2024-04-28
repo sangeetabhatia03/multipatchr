@@ -236,16 +236,22 @@ update_ksa_state_screening_incomingphase <- function(state,
   
   movers_in_tested_compartments <- n_moving[tested_compartments]
   
-  # single testing rate at the moment so we just extract from one of the patches
+  # single testing rate and sensitivity at the moment so we just extract from one of the patches
   test_rate <- state[["patches"]][[1]][["testing_rate"]]
+  test_sensitivity <- state[["patches"]][[1]][["test_sensitivity"]]
   
-  # for each set of movers, draw from binomial distribution to get number that would be diagnosed
-  diagnosed_on_arrival <- lapply(movers_in_tested_compartments, function(mat) {
+  # for each set of movers, draw from binomial distribution to get number that would be tested
+  tested_on_arrival <- lapply(movers_in_tested_compartments, function(mat) {
     apply(mat, c(1, 2), function(x) stats::rbinom(1, x, test_rate))
+  })
+  browser()
+  # for each set of tested ppl, draw from binomial distribution to get number that would be diagnosed
+  diagnosed_on_arrival <- lapply(tested_on_arrival, function(mat) {
+    apply(mat, c(1, 2), function(x) stats::rbinom(1, x, test_sensitivity))
   })
   
   # Record how many false negatives there were
-  missed_diagnosis <- map2(movers_in_tested_compartments, diagnosed_on_arrival, \(x, y) x-y)
+  missed_diagnosis <- map2(tested_on_arrival, diagnosed_on_arrival, \(x, y) x-y)
   
   # We can also get some pilgrims in S or R who are falsely diagnosed on arrival
   # We assume a certain false positive rate that depends on the test specificity and
@@ -263,17 +269,6 @@ update_ksa_state_screening_incomingphase <- function(state,
   })
   
   diagnoses_on_arrival <- c(diagnosed_on_arrival, falsely_diagnosed_on_arrival)
-  
-  # No longer need the next section of code as we test all compartments
-  # # Create a list that also includes any compartments that were not tested (S, R, etc)
-  # # use this to record which of the movers need to go to test compartments
-  # diagnosed_all <- lapply(n_moving, function(mat) {
-  #   apply(mat, c(1, 2), function(x) 0L)
-  # })
-  # 
-  # for (name in names(diagnosed_on_arrival)) {
-  #   diagnosed_all[[name]] <- diagnosed_on_arrival[[name]]
-  # }
   
   n_patches <- length(state[["patches"]])
   
@@ -301,6 +296,9 @@ update_ksa_state_screening_incomingphase <- function(state,
       
       new_diagnosed <- paste0("new_", compartment)
       patch[[new_diagnosed]] <- from_other_patches(diagnoses_on_arrival[[undiagnosed_compartment]], idx)
+      
+      new_false_neg <- paste0("new_false_neg_", compartment)
+      patch[[new_false_neg]] <- from_other_patches(diagnoses_on_arrival[[undiagnosed_compartment]], idx)
     }
     
     for (compartment in false_positive_compartments) {
