@@ -213,6 +213,14 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate, screening 
     patch$susceptible, exposure_rate, dt
   )
   
+  if (patch$isolation_period == 0) {
+    
+    warning(
+      "Isolation period is set at 0 days. All false positive susceptibles and
+      recovereds will be returned to S and R."
+    )
+  }
+  
   newly_released_s_false <- to_next_compartment(
     patch$susceptible_false_positive, 1/patch$isolation_period, dt
     )
