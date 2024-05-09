@@ -1,47 +1,3 @@
-# Function for computing the ksa_exposure rate
-compute_ksa_exposure_rate <- function(state, ksa_index) {
-  
-  # Find the sub-patches in KSA using pre-defined ksa_index
-  ksa_patches <- state[["patches"]][ksa_index]
-  
-  # How many symptomatic, pre-symptomatic, and asymptomatic
-  # infections in KSA at this time, across all sub-patches
-  ksa_infections_symptomatic <- ksa_patches %>%
-    purrr::map_dbl(~ .x$infected_symptomatic) %>% 
-    purrr::reduce(`+`)
-  
-  ksa_infections_presymptomatic <- ksa_patches %>% 
-    purrr::map_dbl(~ .x$infected_presymptomatic) %>% 
-    purrr::reduce(`+`)
-  
-  ksa_infections_asymptomatic <- ksa_patches %>% 
-    purrr::map_dbl(~ .x$infected_asymptomatic) %>% 
-    purrr::reduce(`+`)
-  
-  # How many people in KSA at this time, across all sub-patches
-  ksa_total <- ksa_patches %>%
-    purrr::map_dbl(~ sum(pluck(.x, "susceptible"), pluck(.x, "exposed"),
-                  pluck(.x, "infected_asymptomatic"), pluck(.x, "infected_presymptomatic"),
-                  pluck(.x, "infected_symptomatic"), pluck(.x, "recovered"))) %>%
-    purrr::reduce(`+`)
-  
-  # What is ksa exposure rate, calculated across all sub-patches
-  ksa_transmission_rate <- ksa_patches[[1]]$transmission_rate  # same for all so can extract form patch 1 only
-  asymptomatic_infectivity <- ksa_patches[[1]]$asymptomatic_infectiousness
-  presymptomatic_infectivity <- ksa_patches[[1]]$presymptomatic_infectiousness
-  
-  ksa_exposure_rate <- ifelse(ksa_total > 0,
-                              ksa_transmission_rate * (
-                                ksa_infections_symptomatic + 
-                                  presymptomatic_infectivity * ksa_infections_presymptomatic +
-                                  asymptomatic_infectivity * ksa_infections_asymptomatic
-                              )  / ksa_total,
-                              0)
-  
-}
-
-
-
 ##' @title Update state
 ##' @param state state is a collection of patches and a matrix of
 ##' rates of movement between patches.
@@ -277,8 +233,11 @@ update_ksa_state_screening_incomingphase <- function(state,
   diagnoses_on_arrival <- c(diagnosed_on_arrival, falsely_diagnosed_on_arrival)
   
   n_patches <- length(state[["patches"]])
+  # browser()
+  ksa_exposure_rate <- compute_ksa_exposure_rate_original(state, ksa_index) # potentially move this
   
-  ksa_exposure_rate <- compute_ksa_exposure_rate(state, ksa_index) # potentially move this
+  pilgrim_exposure_rate <- compute_ksa_exposure_rate(state, ksa_index, atrisk_index)
+  atrisk_exposure_rate <- compute_atrisk_exposure_rate(state, ksa_index, atrisk_index)
   
   for (idx in seq_len(n_patches)) {
     
