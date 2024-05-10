@@ -234,16 +234,17 @@ update_ksa_state_screening_incomingphase <- function(state,
   
   n_patches <- length(state[["patches"]])
   # browser()
-  ksa_exposure_rate <- compute_ksa_exposure_rate_original(state, ksa_index) # potentially move this
+  # ksa_exposure_rate <- compute_ksa_exposure_rate_original(state, ksa_index) # potentially move this
+  # 
+  # pilgrim_exposure_rate <- compute_ksa_exposure_rate(state, ksa_index, atrisk_index)
+  # atrisk_exposure_rate <- compute_atrisk_exposure_rate(state, ksa_index, atrisk_index)
   
-  pilgrim_exposure_rate <- compute_ksa_exposure_rate(state, ksa_index, atrisk_index)
-  atrisk_exposure_rate <- compute_atrisk_exposure_rate(state, ksa_index, atrisk_index)
+  # Step 1. Move individuals
   
   for (idx in seq_len(n_patches)) {
     
     patch <- state[["patches"]][[idx]]
     
-    # Step 1. Move individuals
     for (compartment in moving_compartments) {
       patch[[compartment]] <- patch[[compartment]] -
         to_other_patches(n_moving[[compartment]],  idx) +
@@ -277,19 +278,33 @@ update_ksa_state_screening_incomingphase <- function(state,
       patch[[new_false_positive]] <- from_other_patches(diagnoses_on_arrival[[unscreened_compartment]], idx)
     }
     
+    state[["patches"]][[idx]] <- patch
     
-    # Step 2. Update disease states.
+  }
+  
+  # Step 2. Update disease states.
+  
+  # Compute the exposure rates among pilgrims and "at risk" non-pilgrims  
+  pilgrim_exposure_rate <- compute_ksa_exposure_rate(state, ksa_index, atrisk_index)
+  atrisk_exposure_rate <- compute_atrisk_exposure_rate(state, ksa_index, atrisk_index)
+    
+  for (idx in seq_len(n_patches)) {
+    
+    patch <- state[["patches"]][[idx]]
+    
     if (idx %in% ksa_index) {
       # this first modified function uses the pre-specified exposure rate for KSA sub-patches
       # this was computed above
-      state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, ksa_exposure_rate,
+      state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, pilgrim_exposure_rate,
+                                                             screening = TRUE)
+    } else if (idx %in% atrisk_index) {
+      
+      state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, atrisk_exposure_rate,
                                                              screening = TRUE)
     } else {
       state[["patches"]][[idx]] <- update_patch_symptoms(patch, dt,
                                                          screening = TRUE)
     }
-    
-    
   }
   state
 }

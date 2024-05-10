@@ -238,6 +238,8 @@ patch_symptoms <- function(s_patch,
 ##' @param birth_rate Birth rate for this patch. Number of births per unit time
 ##' @param death_rate Death rate for this patch. Number of deaths per unit time in this patch
 ##' @param transmission_rate effective contact rate
+##' @param transmission_rate_pilgrims effective contact rate between pilgrims
+##' @param transmission_rate_pilgrims_and_atrisk effective contact rate between pilgrims and at risk non-pilgrims
 ##' @param asymptomatic_infectiousness Proportion giving 
 ##' the infectivity of asymptomatic cases relative to
 ##' symptomatic cases.
@@ -267,7 +269,9 @@ patch_symptoms <- function(s_patch,
 ##' ** recovered_diagnosed ** Number of diagnosed recovered individuals in this patch
 ##' ** birth_rate ** Patch-specific birth rate
 ##' ** death_rate ** Patch-specific death rate
-##' ** transmission_rate ** Effective contact rate for this patch
+##' ** transmission_rate ** Effective contact rate between non-pilgrims
+##' ** transmission_rate_pilgrims ** Effective contact rate between pilgrims
+##' ** transmission_rate_pilgrims_and_atrisk ** Effective contact rate between pilgrims and "at risk" non-pilgrims
 ##' ** asymptomatic_infectiousness ** Relative infectivity of asymptomatic infected individuals
 ##' ** presymptomatic_infectiousness ** Relative infectivity of presymptomatic infected individuals
 ##' ** prop_symptomatic ** Proportion of infections with symptoms
@@ -298,6 +302,8 @@ patch_symptoms_testing <- function(s_patch,
                                    birth_rate,
                                    death_rate,
                                    transmission_rate,
+                                   transmission_rate_pilgrims,
+                                   transmission_rate_pilgrims_and_atrisk,
                                    asymptomatic_infectiousness,
                                    presymptomatic_infectiousness,
                                    prop_symptomatic,
@@ -312,7 +318,8 @@ patch_symptoms_testing <- function(s_patch,
   args <- list(
     s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch, r_patch,
     e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch, r_diag_patch,
-    s_false_patch, r_false_patch, birth_rate, death_rate, transmission_rate,
+    s_false_patch, r_false_patch, birth_rate, death_rate,
+    transmission_rate, transmission_rate_pilgrims, transmission_rate_pilgrims_and_atrisk,
     asymptomatic_infectiousness, presymptomatic_infectiousness,
     prop_symptomatic, infection_rate, symptom_rate,
     recovery_rate_asym, recovery_rate_sym, testing_rate,
@@ -385,6 +392,8 @@ patch_symptoms_testing <- function(s_patch,
     birth_rate = birth_rate,
     death_rate = death_rate,
     transmission_rate = transmission_rate,
+    transmission_rate_pilgrims = transmission_rate_pilgrims,
+    transmission_rate_pilgrims_and_atrisk = transmission_rate_pilgrims_and_atrisk,
     asymptomatic_infectiousness = asymptomatic_infectiousness,
     presymptomatic_infectiousness = presymptomatic_infectiousness,
     prop_symptomatic = prop_symptomatic,

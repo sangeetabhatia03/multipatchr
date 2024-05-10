@@ -26,7 +26,7 @@ compute_ksa_exposure_rate_original <- function(state, ksa_index) {
     purrr::reduce(`+`)
   
   # What is ksa exposure rate, calculated across all sub-patches
-  ksa_transmission_rate <- ksa_patches[[1]]$transmission_rate  # same for all so can extract form patch 1 only
+  ksa_transmission_rate <- ksa_patches[[1]]$transmission_rate_pilgrims  # same for all so can extract form patch 1 only
   asymptomatic_infectivity <- ksa_patches[[1]]$asymptomatic_infectiousness
   presymptomatic_infectivity <- ksa_patches[[1]]$presymptomatic_infectiousness
   
@@ -105,7 +105,7 @@ compute_atrisk_exposure_rate <- function(state, ksa_index, atrisk_index) {
                                           atrisk_relative_infections$patch_group_total,
                                           0)
   
-  pilgrim2atrisk_exposure_rate <- ifelse(atrisk_relative_infections$patch_group_total > 0,
+  pilgrim2atrisk_exposure_rate <- ifelse(pilgrim_relative_infections$patch_group_total > 0,
                                          pilgrim2atrisk_transmission_rate *
                                            pilgrim_relative_infections$relative_infectious_cases / 
                                            pilgrim_relative_infections$patch_group_total,

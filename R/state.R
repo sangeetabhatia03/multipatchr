@@ -366,6 +366,10 @@ state_symptoms <- function(s_patches,
 ##' @param death_rates patch-specific death rates
 ##' @param transmission_rates Vector of patch-specific transmission
 ##' rate
+##' @param transmission_rates_pilgrims Vector of transmission
+##' rate between pilgrims
+##' @param transmission_rates_pilgrims_and_atrisk Vector of transmission
+##' rate between pilgrims and "at risk" non-pilgrims
 ##' @param asymptomatic_infectiousness Vector of proportions that 
 ##' give the infectivity of asymptomatic cases relative to
 ##' symptomatic cases.
@@ -418,6 +422,8 @@ state_symptoms_testing <- function(s_patches,
                            birth_rates,
                            death_rates,
                            transmission_rates,
+                           transmission_rates_pilgrims,
+                           transmission_rates_pilgrims_and_atrisk,
                            asymptomatic_infectiousness,
                            presymptomatic_infectiousness,
                            prop_symptomatic,
@@ -449,6 +455,8 @@ state_symptoms_testing <- function(s_patches,
     birth_rates = birth_rates,
     death_rates = death_rates,
     transmission_rates = transmission_rates,
+    transmission_rates_pilgrims = transmission_rates_pilgrims,
+    transmission_rates_pilgrims_and_atrisk = transmission_rates_pilgrims_and_atrisk,
     asymptomatic_infectiousness = asymptomatic_infectiousness,
     presymptomatic_infectiousness = presymptomatic_infectiousness,
     prop_symptomatic = prop_symptomatic,
@@ -525,6 +533,8 @@ state_symptoms_testing <- function(s_patches,
       birth_rate = patch_args$birth_rates,
       death_rate = patch_args$death_rates,
       transmission_rate = patch_args$transmission_rates,
+      transmission_rate_pilgrims = patch_args$transmission_rates_pilgrims,
+      transmission_rate_pilgrims_and_atrisk = patch_args$transmission_rates_pilgrims_and_atrisk,
       asymptomatic_infectiousness = patch_args$asymptomatic_infectiousness,
       presymptomatic_infectiousness = patch_args$presymptomatic_infectiousness,
       prop_symptomatic = patch_args$prop_symptomatic,
