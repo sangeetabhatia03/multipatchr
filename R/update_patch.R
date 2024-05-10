@@ -213,16 +213,32 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate, screening 
     patch$susceptible, exposure_rate, dt
   )
   
+  if (patch$isolation_period == 0) {
+    
+    warning(
+      "Isolation period is set at 0 days. All false positive susceptibles and
+      recovereds will be returned to S and R."
+    )
+  }
+  
+  newly_released_s_false <- to_next_compartment(
+    patch$susceptible_false_positive, 1/patch$isolation_period, dt
+    )
+
   patch$susceptible <- patch$susceptible -
     newly_exposed -
     deaths(patch$susceptible, patch$death_rate, dt) +
-    births(patch$susceptible, patch$birth_rate, dt)
+    births(patch$susceptible, patch$birth_rate, dt) +
+    newly_released_s_false
+  
+  patch$susceptible_false_positive <- patch$susceptible_false_positive -
+    newly_released_s_false
   
   newly_infected <-  to_next_compartment(
     patch$exposed, patch$infection_rate, dt
   )
   
-  newly_infected_presymptomatic <- round(patch$prop_symptomatic * newly_infected)
+  newly_infected_presymptomatic <- stats::rbinom(1, newly_infected, patch$prop_symptomatic)
   newly_infected_asymptomatic <- newly_infected - newly_infected_presymptomatic
   
   patch$exposed <- patch$exposed -
@@ -257,10 +273,18 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate, screening 
     deaths(patch$infected_symptomatic, patch$death_rate, dt) +
     newly_symptomatic
   
+  newly_released_r_false <- to_next_compartment(
+    patch$recovered_false_positive, 1/patch$isolation_period, dt
+  )
+  
   patch$recovered <- patch$recovered -
     deaths(patch$recovered, patch$death_rate, dt) +
     newly_recovered_asymptomatic +
-    newly_recovered_symptomatic
+    newly_recovered_symptomatic +
+    newly_released_r_false
+  
+  patch$recovered_false_positive <- patch$recovered_false_positive -
+    newly_released_r_false
   
   patch
 }
@@ -278,7 +302,7 @@ update_patch_screening <- function(patch, dt) {
     patch$exposed_diagnosed, patch$infection_rate, dt
   )
   
-  newly_infected_diag_presymptomatic <- round(patch$prop_symptomatic * newly_infected_diagnosed)
+  newly_infected_diag_presymptomatic <- stats::rbinom(1, newly_infected_diagnosed, patch$prop_symptomatic)
   newly_infected_diag_asymptomatic <- newly_infected_diagnosed - newly_infected_diag_presymptomatic
   
   patch$exposed_diagnosed <- patch$exposed_diagnosed -
@@ -316,6 +340,12 @@ update_patch_screening <- function(patch, dt) {
     deaths(patch$recovered_diagnosed, patch$death_rate, dt) +
     newly_recovered_diag_asymptomatic +
     newly_recovered_diag_symptomatic
+  
+  # newly_released_s_false <- to_next_compartment(
+  #   patch$susceptible_false_positive, 1/patch$isolation_period, dt
+  #   )
+  # 
+  # patch$susceptible
   
   patch
 }
