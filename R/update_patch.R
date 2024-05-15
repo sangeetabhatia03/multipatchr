@@ -191,7 +191,10 @@ update_patch_symptoms <- function(patch, dt, screening = FALSE) {
 }
 
 
-update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate, screening = FALSE) {
+update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
+                                      finished_isolating_s,
+                                      finished_isolating_r,
+                                      screening = FALSE) {
   
   if (! inherits(patch, "patch")) {
     stop(
@@ -221,9 +224,11 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate, screening 
     )
   }
   
-  newly_released_s_false <- to_next_compartment(
-    patch$susceptible_false_positive, 1/patch$isolation_period, dt
-    )
+  # newly_released_s_false <- to_next_compartment(
+  #   patch$susceptible_false_positive, 1/patch$isolation_period, dt
+  #   )
+  
+  newly_released_s_false <- finished_isolating_s
 
   patch$susceptible <- patch$susceptible -
     newly_exposed -
@@ -273,9 +278,10 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate, screening 
     deaths(patch$infected_symptomatic, patch$death_rate, dt) +
     newly_symptomatic
   
-  newly_released_r_false <- to_next_compartment(
-    patch$recovered_false_positive, 1/patch$isolation_period, dt
-  )
+  # newly_released_r_false <- to_next_compartment(
+  #   patch$recovered_false_positive, 1/patch$isolation_period, dt
+  # )
+  newly_released_r_false <- finished_isolating_r
   
   patch$recovered <- patch$recovered -
     deaths(patch$recovered, patch$death_rate, dt) +
