@@ -241,11 +241,6 @@ update_ksa_state_screening_incomingphase <- function(state,
   diagnoses_on_arrival <- c(diagnosed_on_arrival, falsely_diagnosed_on_arrival)
   
   n_patches <- length(state[["patches"]])
-  # browser()
-  # ksa_exposure_rate <- compute_ksa_exposure_rate_original(state, ksa_index) # potentially move this
-  # 
-  # pilgrim_exposure_rate <- compute_ksa_exposure_rate(state, ksa_index, atrisk_index)
-  # atrisk_exposure_rate <- compute_atrisk_exposure_rate(state, ksa_index, atrisk_index)
   
   # Step 1. Move individuals
   
@@ -300,17 +295,8 @@ update_ksa_state_screening_incomingphase <- function(state,
     
     patch <- state[["patches"]][[idx]]
     
-    if (is.null(old_state)) {
-      
-      finished_isolating_s <- 0
-      finished_isolating_r <- 0
-      
-    } else {
-      
-      finished_isolating_s <- finished_isolating_s_all_patches[idx]
-      finished_isolating_r <- finished_isolating_r_all_patches[idx]
-      # browser()
-    }
+    finished_isolating_s <- set_finished_isolators(old_state, finished_isolating_s_all_patches, idx)
+    finished_isolating_r <- set_finished_isolators(old_state, finished_isolating_r_all_patches, idx)
     
     if (idx %in% ksa_index) {
       # this first modified function uses the pre-specified exposure rate for KSA sub-patches
@@ -360,7 +346,7 @@ update_ksa_state_screening_otherphases <- function(state,
     finished_isolating_r_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_recovered_false_positive))
     
   }
-  # browser()
+  
   n_moving <- get_number_migrating_symptoms(state, dt, moving_compartments, movement_type, relative_movement)
   
   n_patches <- length(state[["patches"]])
@@ -397,18 +383,8 @@ update_ksa_state_screening_otherphases <- function(state,
     
     patch <- state[["patches"]][[idx]]
     
-    # TO DO: put this if else statement as a separate function. Also used in "incoming_phases" fcn
-    if (is.null(old_state)) {
-      
-      finished_isolating_s <- 0
-      finished_isolating_r <- 0
-      
-    } else {
-      
-      finished_isolating_s <- finished_isolating_s_all_patches[idx]
-      finished_isolating_r <- finished_isolating_r_all_patches[idx]
-      # browser()
-    }
+    finished_isolating_s <- set_finished_isolators(old_state, finished_isolating_s_all_patches, idx)
+    finished_isolating_r <- set_finished_isolators(old_state, finished_isolating_r_all_patches, idx)
     
     if (idx %in% ksa_index) {
       
