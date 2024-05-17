@@ -881,6 +881,204 @@ plot_infections_symptoms <- function(simulation,
   p
 }
 
+plot_diagnosed_infections <- function(simulation,
+                                      vars = c(
+                                        "exposed_diagnosed",
+                                        "infected_asymptomatic_diagnosed",
+                                        "infected_presymptomatic_diagnosed",
+                                        "infected_symptomatic_diagnosed")) {
+  
+  simulation <- dplyr::filter(simulation, variable %in% vars)
+  
+  p <- ggplot(simulation, aes(time, value, col = variable, group = interaction(sim, variable))) +
+    # geom_line(alpha = 0.3) +
+    geom_line() +
+    scale_color_manual(values = project_theme_diag$screening_scale) +
+    project_theme$theme +
+    project_theme$legend +
+    project_theme$axis_labels +
+    facet_wrap(~patch, scales = "free")
+  
+  p
+}
+
+plot_isolated_pilgrims <- function(simulation,
+                                      vars = c(
+                                        "susceptible_false_positive",
+                                        "recovered_false_positive",
+                                        "exposed_diagnosed",
+                                        "infected_asymptomatic_diagnosed",
+                                        "infected_presymptomatic_diagnosed",
+                                        "infected_symptomatic_diagnosed")) {
+  
+  simulation <- dplyr::filter(simulation, variable %in% vars) %>% 
+    dplyr::filter(grepl("^KSA_", patch) & patch != "KSA_AtRisk") %>% 
+    group_by(sim, time, variable) %>% 
+    summarise(total = sum(value))
+  
+  # Calculate the sum of 'total' for each 'time'
+  time_sums <- simulation %>%
+    group_by(sim, time) %>%
+    summarize(total = sum(total, na.rm = TRUE)) %>% 
+    mutate(variable = "total_isolating")
+  
+  # Add the summarized information back to the original dataframe
+  combined_df <- bind_rows(
+    simulation %>%
+      mutate(variable = as.character(variable)),  # Ensure the variable column is character for consistent binding
+    time_sums
+  ) %>% 
+    mutate(group = case_when(
+      grepl("false_positive$", variable) ~ "False positive",
+      grepl("diagnosed$", variable) ~ "True positive",
+      grepl("total_isolating", variable) ~ "Total isolating",
+      TRUE ~ NA_character_  # In case there are other values that don't match the patterns
+    )) %>% 
+    arrange(sim, time)
+  
+  # Set levels of factors for ordering in plot
+  combined_df$variable <- factor(combined_df$variable, levels = c(
+    "exposed_diagnosed",
+    "infected_asymptomatic_diagnosed",
+    "infected_presymptomatic_diagnosed",
+    "infected_symptomatic_diagnosed",
+    "susceptible_false_positive",
+    "recovered_false_positive",
+    "total_isolating"
+  ))
+  
+  combined_df$group <- factor(combined_df$group, levels = c(
+    "True positive",
+    "False positive",
+    "Total isolating"
+  ))
+  
+  p <-
+    ggplot(combined_df, aes(time, total, col = variable, group = interaction(sim, variable))) +
+    geom_line() +
+    # scale_color_manual(values = project_theme_diag$screening_scale) +
+    project_theme$theme +
+    project_theme$legend +
+    # project_theme$axis_labels +
+    xlab("Time (days)") +
+    ylab("Number of people in isolation at time = t") +
+    facet_wrap(~group, scales = "free")
+  
+  p
+}
+
+plot_undiagnosed_infections <- function(simulation,
+                                        vars = c(
+                                          "exposed",
+                                          "infected_asymptomatic",
+                                          "infected_presymptomatic",
+                                          "infected_symptomatic")) {
+  
+  simulation <- dplyr::filter(simulation, variable %in% vars) %>% 
+    dplyr::filter(grepl("^KSA_", patch) & patch != "KSA_AtRisk") %>% 
+    group_by(sim, time, variable) %>% 
+    summarise(total = sum(value))
+  
+  # Set levels of factors for ordering in plot
+  simulation$variable <- factor(simulation$variable, levels = c(
+    "exposed",
+    "infected_asymptomatic",
+    "infected_presymptomatic",
+    "infected_symptomatic"
+  ))
+  
+  p <-
+    ggplot(simulation, aes(time, total, col = variable, group = interaction(sim, variable))) +
+    geom_line() +
+    # scale_color_manual(values = project_theme_diag$screening_scale) +
+    project_theme$theme +
+    project_theme$legend +
+    # project_theme$axis_labels +
+    xlab("Time (days)") +
+    ylab("Number of undiagnosed infections at time = t")
+  
+  p
+}
+
+plot_missed_infections <- function(simulation,
+                                        vars = c(
+                                          "exposed",
+                                          "infected_asymptomatic",
+                                          "infected_presymptomatic",
+                                          "infected_symptomatic")) {
+  
+  search_pattern <- paste0("_", vars, collapse = "|")
+  
+  simulation <- simulation %>% 
+    dplyr::filter(grepl("^KSA_", patch) & patch != "KSA_AtRisk") %>% 
+    dplyr::filter(grepl(search_pattern, variable)) %>% 
+    group_by(sim, time, variable) %>% 
+    summarise(total = sum(value))
+  
+  untested_values <- simulation %>%
+    group_by(sim, time) %>%
+    summarise(
+      exposed_untested = sum(total[grepl("imported_exposed", variable)]) - sum(total[grepl("new_exposed_diagnosed", variable)]) - sum(total[grepl("new_false_neg_exposed", variable)]),
+      infected_asymptomatic_untested = sum(total[grepl("imported_infected_asymptomatic", variable)]) - sum(total[grepl("new_infected_asymptomatic_diagnosed", variable)]) - sum(total[grepl("new_false_neg_infected_asymptomatic", variable)]),
+      infected_symptomatic_untested = sum(total[grepl("imported_infected_symptomatic", variable)]) - sum(total[grepl("new_infected_symptomatic_diagnosed", variable)]) - sum(total[grepl("new_false_neg_infected_symptomatic", variable)]),
+      infected_presymptomatic_untested = sum(total[grepl("imported_infected_presymptomatic", variable)]) - sum(total[grepl("new_infected_presymptomatic_diagnosed", variable)]) - sum(total[grepl("new_false_neg_infected_presymptomatic", variable)])
+    ) %>%
+    pivot_longer(
+      cols = starts_with("exposed") | starts_with("infected"),
+      names_to = "variable",
+      values_to = "total"
+    )
+  
+  combined_df <- bind_rows(
+    simulation %>%
+      mutate(variable = as.character(variable)),  # Ensure the variable column is character for consistent binding
+    untested_values
+  ) %>% 
+    mutate(group = case_when(
+      grepl("imported", variable) ~ "Imported",
+      grepl("diagnosed", variable) ~ "True positive",
+      grepl("false_neg", variable) ~ "False negative",
+      grepl("untested", variable) ~ "Untested",
+      TRUE ~ NA_character_  # In case there are other values that don't match the patterns
+    )) %>% 
+    arrange(sim, time)
+  
+  # Pattern to extract the relevant part of the variable names
+  relevant_parts_pattern <- "exposed|infected_asymptomatic|infected_symptomatic|infected_presymptomatic"
+  
+  # Use mutate to create a new column with the simplified variable names
+  combined_df <- combined_df %>%
+    mutate(variable_simplified = str_extract(variable, relevant_parts_pattern))
+  
+  # Set levels of factors for ordering in plot
+  combined_df$group <- factor(combined_df$group, levels = c(
+    "Imported",
+    "True positive",
+    "False negative",
+    "Untested"
+  ))
+  
+  combined_df$variable_simplified <- factor(combined_df$variable_simplified, levels = c(
+    "exposed",
+    "infected_asymptomatic",
+    "infected_presymptomatic",
+    "infected_symptomatic"
+  ))
+  
+  p <-
+    ggplot(combined_df, aes(time, total, col = variable_simplified, group = interaction(sim, variable_simplified))) +
+    geom_line() +
+    # scale_color_manual(values = project_theme_diag$screening_scale) +
+    project_theme$theme +
+    project_theme$legend +
+    # project_theme$axis_labels +
+    xlab("Time (days)") +
+    ylab("Incidence at time = t") +
+    facet_wrap(~group, scales = "free")
+  
+  p
+}
+
 project_theme <- list(
   
   seir_scale = c(
