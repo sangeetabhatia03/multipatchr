@@ -789,16 +789,63 @@ format_model_output <- function(model_output) {
   
 }
 
-get_hajj_epidemic_size <- function(model_summary) {
+get_pilgrim_epidemic_size <- function(model_summary) {
   
   # filter to get only the pilgrim origin countries
-  # exclude returning pilgrims that are not currently or have been previously infected
+  # exclude returning pilgrims that are currently susceptible
   # sum across all the disease compartments
-  model_summary %>%
+  infection_history <- model_summary %>%
     filter(!str_detect(patch, "^KSA_") & str_detect(variable, "^imported_")) %>%
     filter(variable != "imported_susceptible") %>%
     summarize(sum_value = sum(value, na.rm = TRUE)) %>%
     pull(sum_value)
+  
+  # find anybody left in recovered_diagnosed compartment
+  leftover_diagnosed <- model_summary %>%
+    filter(str_detect(patch, "^KSA_") & str_detect(variable, "diagnosed")) %>%
+    filter(time == max(time)) %>%
+    summarize(sum_value = sum(value, na.rm = TRUE)) %>%
+    pull(sum_value)
+  
+  # find anybody that was already recovered when they arrived in KSA
+  recovered_before <- model_summary %>%
+    filter(str_detect(patch, "^KSA_") & variable == "imported_recovered") %>%
+    summarize(sum_value = sum(value, na.rm = TRUE)) %>%
+    pull(sum_value)
+  
+  infection_history - recovered_before + leftover_diagnosed
+  
+}
+
+
+get_nonpilgrim_epidemic_size <- function(model_summary) {
+  
+  # filter to get only the pilgrim origin countries
+  # exclude returning pilgrims that are currently susceptible
+  # sum across all the disease compartments
+  infections <- c("exposed", "infected_asymptomatic", "infected_presymptomatic",
+                  "infected_symptomatic", "recovered")
+  infection_history <- model_summary %>%
+    filter((patch == "KSA_AtRisk" | patch == "KSA") & variable %in% infections) %>%
+    filter(time == max(time)) %>%
+    summarize(sum_value = sum(value, na.rm = TRUE)) %>%
+    pull(sum_value)
+  
+  # find any KSA pilgrims that were (previously) infected or infectious upon return
+  infected_KSA_pilgrims <- model_summary %>%
+    filter(patch == "KSA" & str_detect(variable, "imported")) %>%
+    filter(variable != "imported_susceptible") %>%
+    summarize(sum_value = sum(value, na.rm = TRUE)) %>%
+    pull(sum_value)
+  
+  # find anybody left in recovered_diagnosed compartment
+  leftover_diagnosed <- model_summary %>%
+    filter(patch == "KSA_KSA" & str_detect(variable, "diagnosed")) %>%
+    filter(time == max(time)) %>%
+    summarize(sum_value = sum(value, na.rm = TRUE)) %>%
+    pull(sum_value)
+  
+  infection_history - infected_KSA_pilgrims + leftover_diagnosed
   
 }
 
