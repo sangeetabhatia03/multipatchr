@@ -850,6 +850,15 @@ get_nonpilgrim_epidemic_size <- function(model_summary) {
 }
 
 
+extract_parameter <- function(parameter_name, model_summary) {
+  
+  model_summary %>%
+    filter(variable == parameter_name) %>%
+    slice(1) %>%
+    pull(value)
+  
+}
+
 
 plot_simulation <- function(simulation,
                             vars = c(
