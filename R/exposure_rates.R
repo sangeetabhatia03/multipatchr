@@ -56,6 +56,9 @@ compute_ksa_exposure_rate <- function(state, ksa_index, atrisk_index) {
   pilgrim_relative_infections <- get_relative_number_infectious_cases(ksa_patches)
   atrisk_relative_infections <- get_relative_number_infectious_cases(atrisk_patches)
   
+  mixing_population_size <- pilgrim_relative_infections$patch_group_total +
+    atrisk_relative_infections$patch_group_total
+  
   # Extract transmission rates between different groups
   pilgrim2pilgrim_transmission_rate <- ksa_patches[[1]]$transmission_rate_pilgrims  # same for all so can extract form patch 1 only
   atrisk2pilgrim_transmission_rate <- ksa_patches[[1]]$transmission_rate_pilgrims_and_atrisk
@@ -64,13 +67,13 @@ compute_ksa_exposure_rate <- function(state, ksa_index, atrisk_index) {
   pilgrim2pilgrim_exposure_rate <- ifelse(pilgrim_relative_infections$patch_group_total > 0,
                                           pilgrim2pilgrim_transmission_rate *
                                             pilgrim_relative_infections$relative_infectious_cases / 
-                                            pilgrim_relative_infections$patch_group_total,
+                                            mixing_population_size,
                                           0)
   
   atrisk2pilgrim_exposure_rate <- ifelse(atrisk_relative_infections$patch_group_total > 0,
                                          atrisk2pilgrim_transmission_rate *
                                            atrisk_relative_infections$relative_infectious_cases / 
-                                           atrisk_relative_infections$patch_group_total,
+                                           mixing_population_size,
                                          0)
   
   # Sum to give the overall exposure rate
@@ -94,6 +97,9 @@ compute_atrisk_exposure_rate <- function(state, ksa_index, atrisk_index) {
   pilgrim_relative_infections <- get_relative_number_infectious_cases(ksa_patches)
   atrisk_relative_infections <- get_relative_number_infectious_cases(atrisk_patches)
   
+  mixing_population_size <- pilgrim_relative_infections$patch_group_total +
+    atrisk_relative_infections$patch_group_total
+  
   # Extract transmission rates between different groups
   atrisk2atrisk_transmission_rate <- ksa_patches[[1]]$transmission_rate  # same for all so can extract form patch 1 only
   pilgrim2atrisk_transmission_rate <- ksa_patches[[1]]$transmission_rate_pilgrims_and_atrisk
@@ -102,13 +108,13 @@ compute_atrisk_exposure_rate <- function(state, ksa_index, atrisk_index) {
   atrisk2atrisk_exposure_rate <- ifelse(atrisk_relative_infections$patch_group_total > 0,
                                         atrisk2atrisk_transmission_rate *
                                           atrisk_relative_infections$relative_infectious_cases / 
-                                          atrisk_relative_infections$patch_group_total,
+                                          mixing_population_size,
                                           0)
   
   pilgrim2atrisk_exposure_rate <- ifelse(pilgrim_relative_infections$patch_group_total > 0,
                                          pilgrim2atrisk_transmission_rate *
                                            pilgrim_relative_infections$relative_infectious_cases / 
-                                           pilgrim_relative_infections$patch_group_total,
+                                           mixing_population_size,
                                          0)
   
   # Sum to give the overall exposure rate

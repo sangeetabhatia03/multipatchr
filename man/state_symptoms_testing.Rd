@@ -7,10 +7,11 @@
 state_symptoms_testing(s_patches, e_patches, i_a_patches, i_p_patches,
   i_s_patches, r_patches, e_diag_patches, i_a_diag_patches, i_p_diag_patches,
   i_s_diag_patches, r_diag_patches, s_false_patches, r_false_patches,
-  birth_rates, death_rates, transmission_rates, asymptomatic_infectiousness,
+  birth_rates, death_rates, transmission_rates, transmission_rates_pilgrims,
+  transmission_rates_pilgrims_and_atrisk, asymptomatic_infectiousness,
   presymptomatic_infectiousness, prop_symptomatic, infection_rates,
   symptom_rates, recovery_rates_asym, recovery_rates_sym, testing_rates,
-  false_positive_rate, isolation_period, movement_rate)
+  test_sensitivity, test_specificity, isolation_period, movement_rate)
 }
 \arguments{
 \item{s_patches}{Vector of number of
@@ -61,6 +62,12 @@ test result.}
 \item{transmission_rates}{Vector of patch-specific transmission
 rate}
 
+\item{transmission_rates_pilgrims}{Vector of transmission
+rate between pilgrims}
+
+\item{transmission_rates_pilgrims_and_atrisk}{Vector of transmission
+rate between pilgrims and "at risk" non-pilgrims}
+
 \item{asymptomatic_infectiousness}{Vector of proportions that 
 give the infectivity of asymptomatic cases relative to
 symptomatic cases.}
@@ -85,7 +92,9 @@ for symptomatic infections}
 
 \item{testing_rates}{Vector of patch-specific testing rates}
 
-\item{false_positive_rate}{Vector of patch-specific false positive rates}
+\item{test_sensitivity}{Vector of patch-specific test sensitivity}
+
+\item{test_specificity}{Vector of patch-specific test specificity}
 
 \item{isolation_period}{Vector of patch-specific mean duration of 
 isolation following positive test}

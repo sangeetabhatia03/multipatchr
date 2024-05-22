@@ -162,6 +162,7 @@ update_ksa_state_symptoms <- function(state,
 # use this function when pilgrims are travelling to KSA and we want screening to occur
 
 update_ksa_state_screening_incomingphase <- function(state,
+                                                     old_state,
                                                      dt,
                                                      moving_compartments = c("susceptible",
                                                                              "exposed",
@@ -177,10 +178,17 @@ update_ksa_state_screening_incomingphase <- function(state,
                                                                                       "recovered_false_positive"),
                                                      movement_type = c("probability", "rate"), # set default movement type to be prob
                                                      relative_movement = c(1, 1, 1, 1, 1, 1),
-                                                     ksa_index
+                                                     ksa_index, atrisk_index
 ) {
   
   movement_type <- match.arg(movement_type)
+  
+  if (!is.null(old_state)) {
+  
+  finished_isolating_s_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_susceptible_false_positive))
+  finished_isolating_r_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_recovered_false_positive))
+  
+  }
   
   n_moving <- get_number_migrating_symptoms(state, dt, moving_compartments, movement_type, relative_movement)
   
@@ -207,7 +215,7 @@ update_ksa_state_screening_incomingphase <- function(state,
   })
   
   # Record how many false negatives there were
-  missed_diagnosis <- map2(tested_on_arrival, diagnosed_on_arrival, \(x, y) x-y)
+  missed_diagnosis <- purrr::map2(tested_on_arrival, diagnosed_on_arrival, \(x, y) x-y)
   
   # We can also get some pilgrims in S or R who are falsely diagnosed on arrival
   # We assume a certain false positive rate that depends on the test specificity and
@@ -233,11 +241,6 @@ update_ksa_state_screening_incomingphase <- function(state,
   diagnoses_on_arrival <- c(diagnosed_on_arrival, falsely_diagnosed_on_arrival)
   
   n_patches <- length(state[["patches"]])
-  # browser()
-  # ksa_exposure_rate <- compute_ksa_exposure_rate_original(state, ksa_index) # potentially move this
-  # 
-  # pilgrim_exposure_rate <- compute_ksa_exposure_rate(state, ksa_index, atrisk_index)
-  # atrisk_exposure_rate <- compute_atrisk_exposure_rate(state, ksa_index, atrisk_index)
   
   # Step 1. Move individuals
   
@@ -292,14 +295,21 @@ update_ksa_state_screening_incomingphase <- function(state,
     
     patch <- state[["patches"]][[idx]]
     
+    finished_isolating_s <- set_finished_isolators(old_state, finished_isolating_s_all_patches, idx)
+    finished_isolating_r <- set_finished_isolators(old_state, finished_isolating_r_all_patches, idx)
+    
     if (idx %in% ksa_index) {
       # this first modified function uses the pre-specified exposure rate for KSA sub-patches
       # this was computed above
       state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, pilgrim_exposure_rate,
+                                                             finished_isolating_s,
+                                                             finished_isolating_r,
                                                              screening = TRUE)
     } else if (idx %in% atrisk_index) {
       
       state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, atrisk_exposure_rate,
+                                                             finished_isolating_s,
+                                                             finished_isolating_r,
                                                              screening = TRUE)
     } else {
       state[["patches"]][[idx]] <- update_patch_symptoms(patch, dt,
@@ -311,6 +321,7 @@ update_ksa_state_screening_incomingphase <- function(state,
 
 # use this function when pilgrims are either in KSA or travelling home (no screening occurs)
 update_ksa_state_screening_otherphases <- function(state,
+                                                   old_state,
                                                    dt,
                                                    moving_compartments = c("susceptible",
                                                                            "exposed",
@@ -324,16 +335,24 @@ update_ksa_state_screening_otherphases <- function(state,
                                                                               "infected_symptomatic_diagnosed"),
                                                    movement_type = c("probability", "rate"), # set default movement type to be prob
                                                    relative_movement = c(1, 1, 1, 1, 1, 1),
-                                                   ksa_index
+                                                   ksa_index, atrisk_index
 ) {
   
   movement_type <- match.arg(movement_type)
+  
+  if (!is.null(old_state)) {
+    
+    finished_isolating_s_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_susceptible_false_positive))
+    finished_isolating_r_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_recovered_false_positive))
+    
+  }
   
   n_moving <- get_number_migrating_symptoms(state, dt, moving_compartments, movement_type, relative_movement)
   
   n_patches <- length(state[["patches"]])
   
-  ksa_exposure_rate <- compute_ksa_exposure_rate(state, ksa_index)
+  
+  # Step 1. Move individuals
   
   for (idx in seq_len(n_patches)) {
     
@@ -349,10 +368,35 @@ update_ksa_state_screening_otherphases <- function(state,
       
     }
     
+    state[["patches"]][[idx]] <- patch
+    
+  }
+  
+  
+  # Step 2. Update disease states.
+  
+  # Compute the exposure rates among pilgrims and "at risk" non-pilgrims  
+  pilgrim_exposure_rate <- compute_ksa_exposure_rate(state, ksa_index, atrisk_index)
+  atrisk_exposure_rate <- compute_atrisk_exposure_rate(state, ksa_index, atrisk_index)
+  
+  for (idx in seq_len(n_patches)) {
+    
+    patch <- state[["patches"]][[idx]]
+    
+    finished_isolating_s <- set_finished_isolators(old_state, finished_isolating_s_all_patches, idx)
+    finished_isolating_r <- set_finished_isolators(old_state, finished_isolating_r_all_patches, idx)
+    
     if (idx %in% ksa_index) {
-      # this first modified function uses the pre-specified exposure rate for KSA sub-patches
-      # this was computed above
-      state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, ksa_exposure_rate,
+      
+      state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, pilgrim_exposure_rate,
+                                                             finished_isolating_s,
+                                                             finished_isolating_r,
+                                                             screening = TRUE)
+    } else if (idx %in% atrisk_index) {
+      
+      state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, atrisk_exposure_rate,
+                                                             finished_isolating_s,
+                                                             finished_isolating_r,
                                                              screening = TRUE)
     } else {
       state[["patches"]][[idx]] <- update_patch_symptoms(patch, dt,

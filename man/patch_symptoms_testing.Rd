@@ -7,10 +7,11 @@
 patch_symptoms_testing(s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch,
   r_patch, e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch,
   r_diag_patch, s_false_patch, r_false_patch, birth_rate, death_rate,
-  transmission_rate, asymptomatic_infectiousness,
+  transmission_rate, transmission_rate_pilgrims,
+  transmission_rate_pilgrims_and_atrisk, asymptomatic_infectiousness,
   presymptomatic_infectiousness, prop_symptomatic, infection_rate,
   symptom_rate, recovery_rate_asym, recovery_rate_sym, testing_rate,
-  false_positive_rate, isolation_period)
+  test_sensitivity, test_specificity, isolation_period)
 }
 \arguments{
 \item{s_patch}{Number of susceptible individuals in patch}
@@ -45,6 +46,10 @@ patch_symptoms_testing(s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch,
 
 \item{transmission_rate}{effective contact rate}
 
+\item{transmission_rate_pilgrims}{effective contact rate between pilgrims}
+
+\item{transmission_rate_pilgrims_and_atrisk}{effective contact rate between pilgrims and at risk non-pilgrims}
+
 \item{asymptomatic_infectiousness}{Proportion giving 
 the infectivity of asymptomatic cases relative to
 symptomatic cases.}
@@ -65,7 +70,9 @@ symptomatic cases.}
 
 \item{testing_rate}{Proportion of people that are tested}
 
-\item{false_positive_rate}{Proportion of tests that return a false positive}
+\item{test_sensitivity}{Sensitivity of tests}
+
+\item{test_specificity}{Specificity of tests}
 
 \item{isolation_period}{Average duration of isolation following positive test}
 }
@@ -84,7 +91,9 @@ a list of class patch which has the following items
 ** recovered_diagnosed ** Number of diagnosed recovered individuals in this patch
 ** birth_rate ** Patch-specific birth rate
 ** death_rate ** Patch-specific death rate
-** transmission_rate ** Effective contact rate for this patch
+** transmission_rate ** Effective contact rate between non-pilgrims
+** transmission_rate_pilgrims ** Effective contact rate between pilgrims
+** transmission_rate_pilgrims_and_atrisk ** Effective contact rate between pilgrims and "at risk" non-pilgrims
 ** asymptomatic_infectiousness ** Relative infectivity of asymptomatic infected individuals
 ** presymptomatic_infectiousness ** Relative infectivity of presymptomatic infected individuals
 ** prop_symptomatic ** Proportion of infections with symptoms
@@ -93,7 +102,8 @@ a list of class patch which has the following items
 ** Asymptomatic recovery rate ** Rate at which individuals move from  I_a to R.
 ** Symptomatic recovery rate ** Rate at which individuals move from  I_s to R.
 ** Testing rate ** Proportion of individuals that are tested.
-** False positive rate ** Proportion of tests that return a false positive.
+** Test sensitivity ** Sensitivity of tests.
+** Test specificity ** Specificity of tests.
 ** Isolation period ** Average duration of isolation period in days.
 }
 \description{
