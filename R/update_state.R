@@ -185,8 +185,22 @@ update_ksa_state_screening_incomingphase <- function(state,
   
   if (!is.null(old_state)) {
   
+  # Get the numbers of people who entered the false positive compartments at t-isolation_period  
   finished_isolating_s_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_susceptible_false_positive))
   finished_isolating_r_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_recovered_false_positive))
+  
+  # Get the numbers of people who entered the true positive compartments at t-isolation_period
+  finished_isolating_list <- list(
+    entered_e = unlist(sapply(old_state$patches, function(x) x$new_exposed_diagnosed)),
+    entered_ia = unlist(sapply(old_state$patches, function(x) x$new_infected_asymptomatic_diagnosed)),
+    entered_ip = unlist(sapply(old_state$patches, function(x) x$new_infected_presymptomatic_diagnosed)),
+    entered_is = unlist(sapply(old_state$patches, function(x) x$new_infected_symptomatic_diagnosed))
+  )
+  # browser()
+  # finished_isolating_e_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_exposed_diagnosed))
+  # finished_isolating_ia_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_infected_asymptomatic_diagnosed))
+  # finished_isolating_ip_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_infected_presymptomatic_diagnosed))
+  # finished_isolating_is_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_infected_symptomatic_diagnosed))
   
   }
   
@@ -297,6 +311,12 @@ update_ksa_state_screening_incomingphase <- function(state,
     
     finished_isolating_s <- set_finished_isolators(old_state, finished_isolating_s_all_patches, idx)
     finished_isolating_r <- set_finished_isolators(old_state, finished_isolating_r_all_patches, idx)
+
+    finished_isolating_infected <- set_finished_isolators_infected(old_state,
+                                                                   finished_isolating_list,
+                                                                   end_of_isolation_probabilities,
+                                                                   idx)
+    if(!is.null(old_state)) browser()
     
     if (idx %in% ksa_index) {
       # this first modified function uses the pre-specified exposure rate for KSA sub-patches

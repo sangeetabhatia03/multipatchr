@@ -194,6 +194,7 @@ update_patch_symptoms <- function(patch, dt, screening = FALSE) {
 update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
                                       finished_isolating_s,
                                       finished_isolating_r,
+                                      finished_isolating_infected,
                                       screening = FALSE) {
   
   if (! inherits(patch, "patch")) {
