@@ -195,6 +195,7 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
                                       finished_isolating_s,
                                       finished_isolating_r,
                                       finished_isolating_infected,
+                                      old_state,
                                       screening = FALSE) {
   
   if (! inherits(patch, "patch")) {
@@ -205,9 +206,9 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
   }
   
   # First apply transitions to diagnosed compartments if applicable
-  if (screening) {
-  patch <- update_patch_screening(patch, dt)
-  }
+  # if (screening) { # masking this part. We now use a numerical approximation to determine end isolation states
+  # patch <- update_patch_screening(patch, dt)
+  # }
   
   # Now apply transitions to undiagnosed compartments
   
@@ -293,6 +294,24 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
   patch$recovered_false_positive <- patch$recovered_false_positive -
     newly_released_r_false
   
+  
+  if (!is.null(old_state)) {
+   
+    # Define the numbers leaving each of the isolation compartments
+    newly_released_exposed <- finished_isolating_infected["exposed_diagnosed"]
+    newly_released_infected_asymptomatic <- finished_isolating_infected["infected_asymptomatic_diagnosed"]
+    newly_released_infected_presymptomatic <- finished_isolating_infected["infected_presymptomatic_diagnosed"]
+    newly_released_infected_symptomatic <- finished_isolating_infected["infected_symptomatic_diagnosed"]
+    newly_released_recovered <- finished_isolating_infected["recovered_diagnosed"]
+    
+    patch$exposed <- patch$exposed + newly_released_exposed
+    patch$infected_asymptomatic <- patch$infected_asymptomatic + newly_released_infected_asymptomatic
+    patch$infected_presymptomatic <- patch$infected_presymptomatic + newly_released_infected_presymptomatic
+    patch$infected_symptomatic <- patch$infected_symptomatic + newly_released_infected_symptomatic
+    patch$recovered <- patch$recovered + newly_released_recovered
+    
+  }
+    
   patch
 }
 
