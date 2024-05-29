@@ -767,12 +767,14 @@ simulation_as_df_symptoms <- function(simulation) {
     },
     .id = "sim"
   )
+  # browser()
   out$time <- as.integer(out$time)
   out <- replace(out, out == 'NULL', 0)
   out <- pivot_longer(out,
                       # cols = susceptible:recovery_rate_sym,
                       cols = c(susceptible:isolation_period,
-                               imported_susceptible:new_recovered_false_positive),
+                               # imported_susceptible:new_recovered_false_positive),
+                               imported_susceptible:released_recovered),
                       names_to = "variable",
                       values_to = "value")
   out$value <- as.numeric(out$value)

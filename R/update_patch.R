@@ -294,6 +294,9 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
   patch$recovered_false_positive <- patch$recovered_false_positive -
     newly_released_r_false
   
+  # Record the numbers of people released in the model output
+  patch$released_s_false <- newly_released_s_false
+  patch$released_r_false <- newly_released_r_false
   
   if (!is.null(old_state)) {
    
@@ -309,6 +312,13 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
     patch$infected_presymptomatic <- patch$infected_presymptomatic + newly_released_infected_presymptomatic
     patch$infected_symptomatic <- patch$infected_symptomatic + newly_released_infected_symptomatic
     patch$recovered <- patch$recovered + newly_released_recovered
+    
+    # Record the numbers of people released in the model output
+    patch$released_exposed <- newly_released_exposed
+    patch$released_infected_asymptomatic <- newly_released_infected_asymptomatic
+    patch$released_infected_presymptomatic <- newly_released_infected_presymptomatic
+    patch$released_infected_symptomatic <- newly_released_infected_symptomatic
+    patch$released_recovered <- newly_released_recovered
     
   }
     
