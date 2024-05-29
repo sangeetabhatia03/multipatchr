@@ -359,9 +359,17 @@ update_ksa_state_screening_otherphases <- function(state,
   
   if (!is.null(old_state)) {
     
+    # Get the numbers of people who entered the false positive compartments at t-isolation_period  
     finished_isolating_s_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_susceptible_false_positive))
     finished_isolating_r_all_patches <- unlist(sapply(old_state$patches, function(x) x$new_recovered_false_positive))
     
+    # Get the numbers of people who entered the true positive compartments at t-isolation_period
+    finished_isolating_list <- list(
+      entered_e = unlist(sapply(old_state$patches, function(x) x$new_exposed_diagnosed)),
+      entered_ia = unlist(sapply(old_state$patches, function(x) x$new_infected_asymptomatic_diagnosed)),
+      entered_ip = unlist(sapply(old_state$patches, function(x) x$new_infected_presymptomatic_diagnosed)),
+      entered_is = unlist(sapply(old_state$patches, function(x) x$new_infected_symptomatic_diagnosed))
+    )
   }
   
   n_moving <- get_number_migrating_symptoms(state, dt, moving_compartments, movement_type, relative_movement)
@@ -403,17 +411,26 @@ update_ksa_state_screening_otherphases <- function(state,
     finished_isolating_s <- set_finished_isolators(old_state, finished_isolating_s_all_patches, idx)
     finished_isolating_r <- set_finished_isolators(old_state, finished_isolating_r_all_patches, idx)
     
+    finished_isolating_infected <- set_finished_isolators_infected(old_state,
+                                                                   finished_isolating_list,
+                                                                   end_of_isolation_probabilities,
+                                                                   idx)
+    
     if (idx %in% ksa_index) {
       
       state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, pilgrim_exposure_rate,
                                                              finished_isolating_s,
                                                              finished_isolating_r,
+                                                             finished_isolating_infected,
+                                                             old_state,
                                                              screening = TRUE)
     } else if (idx %in% atrisk_index) {
       
       state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, atrisk_exposure_rate,
                                                              finished_isolating_s,
                                                              finished_isolating_r,
+                                                             finished_isolating_infected,
+                                                             old_state,
                                                              screening = TRUE)
     } else {
       state[["patches"]][[idx]] <- update_patch_symptoms(patch, dt,
