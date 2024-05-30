@@ -757,27 +757,67 @@ simulation_as_df_symptoms <- function(simulation) {
   
   out <- purrr::map_dfr(
     simulations,
-    function(sim) {
-      purrr::map_dfr(sim, function(sim) {
-        x <- as.data.frame(do.call("rbind", sim))
-        x$patch <- as.integer(rownames(x))
-        x
+    function(sim_list) {
+      purrr::map_dfr(sim_list, function(sim) {
+        # browser()
+        purrr::map_dfr(sim, function(patch) {
+          # browser()
+          x <- as.data.frame(unlist(patch))
+          names(x) <- "value"
+          x$variable <- rownames(x)
+          # Remove row names
+          rownames(x) <- NULL
+          # Rename columns and reorder
+          x <- x[, c("variable", "value")]
+          
+        }, .id = "patch")
+        # x <- as.data.frame(do.call("rbind", sim))
+        # x <- bind_rows(as.data.frame(sim))
+        # x$patch <- as.integer(rownames(x))
+        # x
       },
       .id = "time")
     },
     .id = "sim"
   )
-  # browser()
+  
+  # Define the order for "variable"
+  variable_order <- c(
+    "susceptible", "susceptible_false_positive",
+    "exposed", "exposed_diagnosed",
+    "infected_asymptomatic", "infected_asymptomatic_diagnosed",
+    "infected_presymptomatic", "infected_presymptomatic_diagnosed",
+    "infected_symptomatic", "infected_symptomatic_diagnosed",
+    "recovered", "recovered_diagnosed",
+    "recovered_false_positive",
+    "imported_susceptible", "imported_exposed",
+    "imported_infected_asymptomatic", "imported_infected_presymptomatic",
+    "imported_infected_symptomatic", "imported_recovered",
+    "new_exposed_diagnosed", "new_false_neg_exposed",
+    "new_infected_asymptomatic_diagnosed", "new_false_neg_infected_asymptomatic",
+    "new_infected_presymptomatic_diagnosed", "new_false_neg_infected_presymptomatic",
+    "new_infected_symptomatic_diagnosed", "new_false_neg_infected_symptomatic",
+    "new_susceptible_false_positive", "new_recovered_false_positive",
+    "released_s_false", "released_r_false",
+    "released_exposed", "released_infected_asymptomatic",
+    "released_infected_presymptomatic", "released_infected_symptomatic",
+    "released_recovered"
+  )
+  
+  out <- filter(out, variable %in% variable_order) 
+    
+  # Complete the dataframe with all combinations of sim, time, patch, and variable
+  out <- out %>% 
+    complete(sim, time, patch, variable = variable_order, fill = list(value = 0))
+  
+  out$variable <- factor(out$variable, levels = variable_order)
   out$time <- as.integer(out$time)
-  out <- replace(out, out == 'NULL', 0)
-  out <- pivot_longer(out,
-                      # cols = susceptible:recovery_rate_sym,
-                      cols = c(susceptible:isolation_period,
-                               # imported_susceptible:new_recovered_false_positive),
-                               imported_susceptible:released_recovered),
-                      names_to = "variable",
-                      values_to = "value")
+  out$patch <- as.integer(out$patch)
   out$value <- as.numeric(out$value)
+  
+  # Arrange out according to defined levels of "variable"
+  out <- out %>% 
+    arrange(sim, time, patch, factor(variable, levels = variable_order))
   
   out
 }

@@ -314,6 +314,7 @@ update_ksa_state_screening_incomingphase <- function(state,
     if (idx %in% ksa_index) {
       # this first modified function uses the pre-specified exposure rate for KSA sub-patches
       # this was computed above
+      # if (!is.null(old_state)) browser()
       state[["patches"]][[idx]] <- update_ksa_patch_symptoms(patch, dt, pilgrim_exposure_rate,
                                                              finished_isolating_s,
                                                              finished_isolating_r,
