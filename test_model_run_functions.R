@@ -383,6 +383,39 @@ run_patch_model_screening_vary_movement2 <- function(movement, dt, sims, startin
     for (i in 1:length(movement)) {
       output <- c(output, model_output[[sim]][[i]][[1]])
     }
+    
+    # Remove the parameters from model output to reduce size
+    output_to_keep <- c(
+      "susceptible", "susceptible_false_positive",
+      "exposed", "exposed_diagnosed",
+      "infected_asymptomatic", "infected_asymptomatic_diagnosed",
+      "infected_presymptomatic", "infected_presymptomatic_diagnosed",
+      "infected_symptomatic", "infected_symptomatic_diagnosed",
+      "recovered", "recovered_diagnosed",
+      "recovered_false_positive",
+      "imported_susceptible", "imported_exposed",
+      "imported_infected_asymptomatic", "imported_infected_presymptomatic",
+      "imported_infected_symptomatic", "imported_recovered",
+      "new_exposed_diagnosed", "new_false_neg_exposed",
+      "new_infected_asymptomatic_diagnosed", "new_false_neg_infected_asymptomatic",
+      "new_infected_presymptomatic_diagnosed", "new_false_neg_infected_presymptomatic",
+      "new_infected_symptomatic_diagnosed", "new_false_neg_infected_symptomatic",
+      "new_susceptible_false_positive", "new_recovered_false_positive",
+      "released_s_false", "released_r_false",
+      "released_exposed", "released_infected_asymptomatic",
+      "released_infected_presymptomatic", "released_infected_symptomatic",
+      "released_recovered"
+    )
+    
+    output <- map(output, function(time) {
+      
+      map(time[["patches"]], function(patch) {
+        
+        patch[names(patch) %in% output_to_keep]
+        
+      })
+    })
+    
     model_output[[sim]] <- output
     
   }
@@ -746,14 +779,15 @@ simulation_as_df <- function(simulation) {
 
 simulation_as_df_symptoms <- function(simulation) {
   
-  simulations <- lapply(simulation, function(x) {
-    
-    lapply(x, function(y) {
-      
-      y[["patches"]]
-      
-    })
-  })
+  # simulations <- lapply(simulation, function(x) {
+  #   
+  #   lapply(x, function(y) {
+  #     
+  #     y[["patches"]]
+  #     
+  #   })
+  # })
+  simulations <- simulation
   
   out <- purrr::map_dfr(
     simulations,
@@ -828,6 +862,35 @@ format_model_output <- function(model_output) {
   patches <- as.vector(patches_in_model$country_name)
   out$patch <- factor(out$patch, labels = patches)
   out
+  
+}
+
+check_released_numbers <- function(formatted_model_output) {
+  
+  # Summarize the total value of the released variables (excluding those containing "false")
+  released_sum <- formatted_model_output %>%
+    filter(grepl("^released_", variable) & !grepl("false", variable)) %>%
+    group_by(sim, patch, time) %>%
+    summarise(total_released = sum(value, na.rm = TRUE), .groups = 'drop')
+  
+  # Summarize the total value of the new diagnosed variables at time - 10
+  new_diagnosed_sum <- formatted_model_output %>%
+    filter(grepl("^new_.*_diagnosed$", variable)) %>%
+    mutate(time = time + 10) %>%
+    group_by(sim, patch, time) %>%
+    summarise(total_new_diagnosed = sum(value, na.rm = TRUE), .groups = 'drop')
+  
+  # Join the two summaries together to compare them
+  comparison <- released_sum %>%
+    inner_join(new_diagnosed_sum, by = c("sim", "patch", "time")) %>%
+    mutate(equal = total_released == total_new_diagnosed)
+  
+  # Check if there is at least one FALSE value in the column
+  if (any(comparison$equal == FALSE)) {
+    print("There are instances where the number of people released does not equal the number diagnosed at the start of the isolation period. Review the output from this function.")
+  } else {
+    "The number of people released equals the number diagnosed at the start of the isolation period, as expected."
+  }
   
 }
 
