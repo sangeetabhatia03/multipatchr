@@ -228,11 +228,12 @@ patch_symptoms <- function(s_patch,
 ##' @param i_p_patch Number of presymptomatic infected individuals in patch
 ##' @param i_s_patch Number of symptomatic infected individuals in patch
 ##' @param r_patch Number of recovered individuals in patch
-##' @param e_diag_patch Number of diagnosed exposed individuals in patch
-##' @param i_a_diag_patch Number of diagnosed asymptomatic infected individuals in patch
-##' @param i_p_diag_patch Number of diagnosed presymptomatic infected individuals in patch
-##' @param i_s_diag_patch Number of diagnosed symptomatic infected individuals in patch
-##' @param r_diag_patch Number of diagnosed recovered individuals in patch
+##' @param diag_patch Number of diagnosed individuals in patch
+# ##' @param e_diag_patch Number of diagnosed exposed individuals in patch
+# ##' @param i_a_diag_patch Number of diagnosed asymptomatic infected individuals in patch
+# ##' @param i_p_diag_patch Number of diagnosed presymptomatic infected individuals in patch
+# ##' @param i_s_diag_patch Number of diagnosed symptomatic infected individuals in patch
+# ##' @param r_diag_patch Number of diagnosed recovered individuals in patch
 ##' @param s_false_patch Number of susceptible individuals with false positive test in patch
 ##' @param r_false_patch Number of recovered individuals with false positive test in patch
 ##' @param birth_rate Birth rate for this patch. Number of births per unit time
@@ -292,11 +293,12 @@ patch_symptoms_testing <- function(s_patch,
                                    i_p_patch,
                                    i_s_patch,
                                    r_patch,
-                                   e_diag_patch,
-                                   i_a_diag_patch,
-                                   i_p_diag_patch,
-                                   i_s_diag_patch,
-                                   r_diag_patch,
+                                   diag_patch,
+                                   # e_diag_patch,
+                                   # i_a_diag_patch,
+                                   # i_p_diag_patch,
+                                   # i_s_diag_patch,
+                                   # r_diag_patch,
                                    s_false_patch,
                                    r_false_patch,
                                    birth_rate,
@@ -317,7 +319,8 @@ patch_symptoms_testing <- function(s_patch,
                                    isolation_period) {
   args <- list(
     s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch, r_patch,
-    e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch, r_diag_patch,
+    diag_patch,
+    # e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch, r_diag_patch,
     s_false_patch, r_false_patch, birth_rate, death_rate,
     transmission_rate, transmission_rate_pilgrims, transmission_rate_pilgrims_and_atrisk,
     asymptomatic_infectiousness, presymptomatic_infectiousness,
@@ -340,15 +343,18 @@ patch_symptoms_testing <- function(s_patch,
   ## an integer, else rbinom will generate NAs.
   are_integers <- sapply(
     c(s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch, r_patch,
-      e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch, r_diag_patch,
+      diag_patch,
+      # e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch, r_diag_patch,
       s_false_patch, r_false_patch),
     function(x) all.equal(x, as.integer(x))
   )
   
   are_positive <- c(s_patch, e_patch,
                     i_a_patch, i_p_patch, i_s_patch, r_patch,
-                    e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch,
-                    r_diag_patch, s_false_patch, r_false_patch) >= 0
+                    diag_patch,
+                    # e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch,
+                    # r_diag_patch,
+                    s_false_patch, r_false_patch) >= 0
   
   stopifnot(all(are_positive))
   
@@ -365,11 +371,12 @@ patch_symptoms_testing <- function(s_patch,
     i_p_patch <- ceiling(i_p_patch)
     i_s_patch <- ceiling(i_s_patch)
     r_patch <- ceiling(r_patch)
-    e_diag_patch <- ceiling(e_diag_patch)
-    i_a_diag_patch <- ceiling(i_a_diag_patch)
-    i_p_diag_patch <- ceiling(i_p_diag_patch)
-    i_s_diag_patch <- ceiling(i_s_diag_patch)
-    r_diag_patch <- ceiling(r_diag_patch)
+    diag_patch <- ceiling(diag_patch)
+    # e_diag_patch <- ceiling(e_diag_patch)
+    # i_a_diag_patch <- ceiling(i_a_diag_patch)
+    # i_p_diag_patch <- ceiling(i_p_diag_patch)
+    # i_s_diag_patch <- ceiling(i_s_diag_patch)
+    # r_diag_patch <- ceiling(r_diag_patch)
     s_false_patch <- ceiling(s_false_patch)
     r_false_patch <- ceiling(r_false_patch)
     
@@ -379,16 +386,17 @@ patch_symptoms_testing <- function(s_patch,
     susceptible = s_patch,
     susceptible_false_positive = s_false_patch,
     exposed = e_patch,
-    exposed_diagnosed = e_diag_patch,
+    # exposed_diagnosed = e_diag_patch,
     infected_asymptomatic = i_a_patch,
-    infected_asymptomatic_diagnosed = i_a_diag_patch,
+    # infected_asymptomatic_diagnosed = i_a_diag_patch,
     infected_presymptomatic = i_p_patch,
-    infected_presymptomatic_diagnosed = i_p_diag_patch,
+    # infected_presymptomatic_diagnosed = i_p_diag_patch,
     infected_symptomatic = i_s_patch,
-    infected_symptomatic_diagnosed = i_s_diag_patch,
+    # infected_symptomatic_diagnosed = i_s_diag_patch,
     recovered = r_patch,
-    recovered_diagnosed = r_diag_patch,
+    # recovered_diagnosed = r_diag_patch,
     recovered_false_positive = r_false_patch,
+    all_diagnosed = diag_patch,
     birth_rate = birth_rate,
     death_rate = death_rate,
     transmission_rate = transmission_rate,
@@ -411,107 +419,107 @@ patch_symptoms_testing <- function(s_patch,
 }
 
 
-patch_symptoms_testing_copy <- function(s_patch,
-                                   e_patch,
-                                   i_a_patch,
-                                   i_p_patch,
-                                   i_s_patch,
-                                   r_patch,
-                                   e_diag_patch,
-                                   i_a_diag_patch,
-                                   i_p_diag_patch,
-                                   i_s_diag_patch,
-                                   r_diag_patch,
-                                   birth_rate,
-                                   death_rate,
-                                   transmission_rate,
-                                   asymptomatic_infectiousness,
-                                   presymptomatic_infectiousness,
-                                   prop_symptomatic,
-                                   infection_rate,
-                                   symptom_rate,
-                                   recovery_rate_asym,
-                                   recovery_rate_sym,
-                                   testing_rate) {
-  args <- list(
-    s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch, r_patch,
-    e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch, r_diag_patch,
-    birth_rate, death_rate, transmission_rate,
-    asymptomatic_infectiousness, presymptomatic_infectiousness,
-    prop_symptomatic, infection_rate, symptom_rate,
-    recovery_rate_asym, recovery_rate_sym, testing_rate
-  )
-  
-  nonnumeric <- unlist(lapply(args, is.numeric))
-  
-  if (! any(nonnumeric)) {
-    stop(
-      "Error when trying to make a patch.
-             At least one argument must be numeric",
-      call. = FALSE
-    )
-  }
-  
-  ## Number of individuals in any compartment must be
-  ## an integer, else rbinom will generate NAs.
-  are_integers <- sapply(
-    c(s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch, r_patch,
-      e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch, r_diag_patch),
-    function(x) all.equal(x, as.integer(x))
-  )
-  
-  are_positive <- c(s_patch, e_patch,
-                    i_a_patch, i_p_patch, i_s_patch, r_patch,
-                    e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch,
-                    r_diag_patch) >= 0
-  
-  stopifnot(all(are_positive))
-  
-  if (! all(are_integers)) {
-    
-    warning(
-      "Number of individuals in each compartment should be a
-             positive integer. Rounding up."
-    )
-    
-    s_patch <- ceiling(s_patch)
-    e_patch <- ceiling(e_patch)
-    i_a_patch <- ceiling(i_a_patch)
-    i_p_patch <- ceiling(i_p_patch)
-    i_s_patch <- ceiling(i_s_patch)
-    r_patch <- ceiling(r_patch)
-    e_diag_patch <- ceiling(e_diag_patch)
-    i_a_diag_patch <- ceiling(i_a_diag_patch)
-    i_p_diag_patch <- ceiling(i_p_diag_patch)
-    i_s_diag_patch <- ceiling(i_s_diag_patch)
-    r_diag_patch <- ceiling(r_diag_patch)
-    
-  }
-  
-  out <- list(
-    susceptible = s_patch,
-    exposed = e_patch,
-    exposed_diagnosed = e_diag_patch,
-    infected_asymptomatic = i_a_patch,
-    infected_asymptomatic_diagnosed = i_a_diag_patch,
-    infected_presymptomatic = i_p_patch,
-    infected_presymptomatic_diagnosed = i_p_diag_patch,
-    infected_symptomatic = i_s_patch,
-    infected_symptomatic_diagnosed = i_s_diag_patch,
-    recovered = r_patch,
-    recovered_diagnosed = r_diag_patch,
-    birth_rate = birth_rate,
-    death_rate = death_rate,
-    transmission_rate = transmission_rate,
-    asymptomatic_infectiousness = asymptomatic_infectiousness,
-    presymptomatic_infectiousness = presymptomatic_infectiousness,
-    prop_symptomatic = prop_symptomatic,
-    infection_rate = infection_rate,
-    symptom_rate = symptom_rate,
-    recovery_rate_asym = recovery_rate_asym,
-    recovery_rate_sym = recovery_rate_sym,
-    testing_rate = testing_rate
-  )
-  class(out) <- "patch"
-  out
-}
+# patch_symptoms_testing_copy <- function(s_patch,
+#                                    e_patch,
+#                                    i_a_patch,
+#                                    i_p_patch,
+#                                    i_s_patch,
+#                                    r_patch,
+#                                    e_diag_patch,
+#                                    i_a_diag_patch,
+#                                    i_p_diag_patch,
+#                                    i_s_diag_patch,
+#                                    r_diag_patch,
+#                                    birth_rate,
+#                                    death_rate,
+#                                    transmission_rate,
+#                                    asymptomatic_infectiousness,
+#                                    presymptomatic_infectiousness,
+#                                    prop_symptomatic,
+#                                    infection_rate,
+#                                    symptom_rate,
+#                                    recovery_rate_asym,
+#                                    recovery_rate_sym,
+#                                    testing_rate) {
+#   args <- list(
+#     s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch, r_patch,
+#     e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch, r_diag_patch,
+#     birth_rate, death_rate, transmission_rate,
+#     asymptomatic_infectiousness, presymptomatic_infectiousness,
+#     prop_symptomatic, infection_rate, symptom_rate,
+#     recovery_rate_asym, recovery_rate_sym, testing_rate
+#   )
+#   
+#   nonnumeric <- unlist(lapply(args, is.numeric))
+#   
+#   if (! any(nonnumeric)) {
+#     stop(
+#       "Error when trying to make a patch.
+#              At least one argument must be numeric",
+#       call. = FALSE
+#     )
+#   }
+#   
+#   ## Number of individuals in any compartment must be
+#   ## an integer, else rbinom will generate NAs.
+#   are_integers <- sapply(
+#     c(s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch, r_patch,
+#       e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch, r_diag_patch),
+#     function(x) all.equal(x, as.integer(x))
+#   )
+#   
+#   are_positive <- c(s_patch, e_patch,
+#                     i_a_patch, i_p_patch, i_s_patch, r_patch,
+#                     e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch,
+#                     r_diag_patch) >= 0
+#   
+#   stopifnot(all(are_positive))
+#   
+#   if (! all(are_integers)) {
+#     
+#     warning(
+#       "Number of individuals in each compartment should be a
+#              positive integer. Rounding up."
+#     )
+#     
+#     s_patch <- ceiling(s_patch)
+#     e_patch <- ceiling(e_patch)
+#     i_a_patch <- ceiling(i_a_patch)
+#     i_p_patch <- ceiling(i_p_patch)
+#     i_s_patch <- ceiling(i_s_patch)
+#     r_patch <- ceiling(r_patch)
+#     e_diag_patch <- ceiling(e_diag_patch)
+#     i_a_diag_patch <- ceiling(i_a_diag_patch)
+#     i_p_diag_patch <- ceiling(i_p_diag_patch)
+#     i_s_diag_patch <- ceiling(i_s_diag_patch)
+#     r_diag_patch <- ceiling(r_diag_patch)
+#     
+#   }
+#   
+#   out <- list(
+#     susceptible = s_patch,
+#     exposed = e_patch,
+#     exposed_diagnosed = e_diag_patch,
+#     infected_asymptomatic = i_a_patch,
+#     infected_asymptomatic_diagnosed = i_a_diag_patch,
+#     infected_presymptomatic = i_p_patch,
+#     infected_presymptomatic_diagnosed = i_p_diag_patch,
+#     infected_symptomatic = i_s_patch,
+#     infected_symptomatic_diagnosed = i_s_diag_patch,
+#     recovered = r_patch,
+#     recovered_diagnosed = r_diag_patch,
+#     birth_rate = birth_rate,
+#     death_rate = death_rate,
+#     transmission_rate = transmission_rate,
+#     asymptomatic_infectiousness = asymptomatic_infectiousness,
+#     presymptomatic_infectiousness = presymptomatic_infectiousness,
+#     prop_symptomatic = prop_symptomatic,
+#     infection_rate = infection_rate,
+#     symptom_rate = symptom_rate,
+#     recovery_rate_asym = recovery_rate_asym,
+#     recovery_rate_sym = recovery_rate_sym,
+#     testing_rate = testing_rate
+#   )
+#   class(out) <- "patch"
+#   out
+# }

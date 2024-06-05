@@ -107,10 +107,10 @@ update_patch_symptoms <- function(patch, dt, screening = FALSE) {
     )
   }
   
-  # First apply transitions to diagnosed compartments if applicable
-  if (screening) {
-    patch <- update_patch_screening(patch, dt)
-  }
+  # # First apply transitions to diagnosed compartments if applicable
+  # if (screening) {
+  #   patch <- update_patch_screening(patch, dt)
+  # }
   
   # Now apply transitions to undiagnosed compartments
   
@@ -205,12 +205,7 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
     )
   }
   
-  # First apply transitions to diagnosed compartments if applicable
-  # if (screening) { # masking this part. We now use a numerical approximation to determine end isolation states
-  # patch <- update_patch_screening(patch, dt)
-  # }
-  
-  # Now apply transitions to undiagnosed compartments
+  # First apply transitions to undiagnosed compartments
   
   exposure_rate <- patch_exposure_rate
   
@@ -314,11 +309,24 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
     newly_released_infected_symptomatic <- as.vector(finished_isolating_infected["infected_symptomatic_diagnosed"])
     newly_released_recovered <- as.vector(finished_isolating_infected["recovered_diagnosed"])
     
+    # Update the undiagnosed compartments with new releases
     patch$exposed <- patch$exposed + newly_released_exposed
     patch$infected_asymptomatic <- patch$infected_asymptomatic + newly_released_infected_asymptomatic
     patch$infected_presymptomatic <- patch$infected_presymptomatic + newly_released_infected_presymptomatic
     patch$infected_symptomatic <- patch$infected_symptomatic + newly_released_infected_symptomatic
     patch$recovered <- patch$recovered + newly_released_recovered
+    
+    # Update the diagnosed compartments following new releases
+    patch$all_diagnosed <- patch$all_diagnosed -
+      newly_released_exposed -
+      newly_released_infected_asymptomatic -
+      newly_released_infected_presymptomatic - 
+      newly_released_infected_symptomatic - 
+      newly_released_recovered
+    # patch$infected_asymptomatic_diagnosed <- patch$infected_asymptomatic_diagnosed - newly_released_infected_asymptomatic
+    # patch$infected_presymptomatic_diagnosed <- patch$infected_presymptomatic_diagnosed - newly_released_infected_presymptomatic
+    # patch$infected_symptomatic_diagnosed <- patch$infected_symptomatic_diagnosed - newly_released_infected_symptomatic
+    # patch$recovered_diagnosed <- patch$recovered_diagnosed - newly_released_recovered
     
     # Update the numbers of people released in the model output (from the default of 0)
     patch$released_exposed <- newly_released_exposed

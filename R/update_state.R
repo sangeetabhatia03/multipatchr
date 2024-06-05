@@ -178,7 +178,7 @@ update_ksa_state_screening_incomingphase <- function(state,
                                                                                       "recovered_false_positive"),
                                                      movement_type = c("probability", "rate"), # set default movement type to be prob
                                                      relative_movement = c(1, 1, 1, 1, 1, 1),
-                                                     ksa_index, atrisk_index
+                                                     ksa_index, atrisk_index, end_of_isolation_probabilities
 ) {
   
   movement_type <- match.arg(movement_type)
@@ -269,8 +269,8 @@ update_ksa_state_screening_incomingphase <- function(state,
     
     for (compartment in screening_compartments) {
       undiagnosed_compartment <- sub("_diagnosed$", "", compartment)
-      patch[[compartment]] <- patch[[compartment]] +
-        from_other_patches(diagnoses_on_arrival[[undiagnosed_compartment]], idx) # screened cases
+      # patch[[compartment]] <- patch[[compartment]] +
+      #   from_other_patches(diagnoses_on_arrival[[undiagnosed_compartment]], idx) # screened cases
       
       new_diagnosed <- paste0("new_", compartment)
       patch[[new_diagnosed]] <- from_other_patches(diagnoses_on_arrival[[undiagnosed_compartment]], idx)
@@ -279,6 +279,17 @@ update_ksa_state_screening_incomingphase <- function(state,
       patch[[new_false_neg]] <- from_other_patches(missed_diagnosis[[undiagnosed_compartment]], idx)
       
     }
+    
+    # Trialing using exposed_diagnosed as a compartment to represent all isolating pilgrims
+    
+    # Identify elements that start with "new_" and end with "_diagnosed"
+    elements_to_sum <- grep("^new_.*_diagnosed$", names(patch), value = TRUE)
+    
+    # Sum the values of these elements
+    sum_of_elements <- sum(unlist(patch[elements_to_sum]))
+    
+    patch[["all_diagnosed"]] <- patch[["all_diagnosed"]] +
+      sum_of_elements
     
     for (compartment in false_positive_compartments) {
       unscreened_compartment <- sub("_false_positive$", "", compartment)
@@ -353,7 +364,7 @@ update_ksa_state_screening_otherphases <- function(state,
                                                                               "infected_symptomatic_diagnosed"),
                                                    movement_type = c("probability", "rate"), # set default movement type to be prob
                                                    relative_movement = c(1, 1, 1, 1, 1, 1),
-                                                   ksa_index, atrisk_index
+                                                   ksa_index, atrisk_index, end_of_isolation_probabilities
 ) {
   
   movement_type <- match.arg(movement_type)

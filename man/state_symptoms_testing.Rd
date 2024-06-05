@@ -5,8 +5,7 @@
 \title{Constructor for state class}
 \usage{
 state_symptoms_testing(s_patches, e_patches, i_a_patches, i_p_patches,
-  i_s_patches, r_patches, e_diag_patches, i_a_diag_patches, i_p_diag_patches,
-  i_s_diag_patches, r_diag_patches, s_false_patches, r_false_patches,
+  i_s_patches, r_patches, diag_patches, s_false_patches, r_false_patches,
   birth_rates, death_rates, transmission_rates, transmission_rates_pilgrims,
   transmission_rates_pilgrims_and_atrisk, asymptomatic_infectiousness,
   presymptomatic_infectiousness, prop_symptomatic, infection_rates,
@@ -32,20 +31,8 @@ symptomatic infected in each patch}
 \item{r_patches}{Vector of number of
 recovered in each patch}
 
-\item{e_diag_patches}{Vector of number of
-diagnosed exposed in each patch}
-
-\item{i_a_diag_patches}{Vector of number of
-diagnosed asymptomatic infected in each patch}
-
-\item{i_p_diag_patches}{Vector of number of
-diagnosed pre-symptomatic infected in each patch}
-
-\item{i_s_diag_patches}{Vector of number of
-diagnosed symptomatic infected in each patch}
-
-\item{r_diag_patches}{Vector of number of
-diagnosed recovered in each patch}
+\item{diag_patches}{Vector of number of
+diagnosed (true diagnosis) in each patch}
 
 \item{s_false_patches}{Vector of number of 
 susceptibles in patch with false positive 
