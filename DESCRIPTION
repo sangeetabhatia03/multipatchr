@@ -19,4 +19,7 @@ Suggests:
 Imports:
     magrittr,
     purrr,
-    extraDistr
+    extraDistr,
+    dplyr,
+    tibble,
+    rlang
