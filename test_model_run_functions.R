@@ -282,11 +282,12 @@ run_patch_model_screening_vary_movement2 <- function(movement, dt, sims, startin
         i_p_patches = starting_state$i_p_patches,
         i_s_patches = starting_state$i_s_patches,
         r_patches = starting_state$r_patches,
-        e_diag_patches = starting_state$e_diag_patches,
-        i_a_diag_patches = starting_state$i_a_diag_patches,
-        i_p_diag_patches = starting_state$i_p_diag_patches,
-        i_s_diag_patches = starting_state$i_s_diag_patches,
-        r_diag_patches = starting_state$r_diag_patches,
+        diag_patches = starting_state$diag_patches,
+        # e_diag_patches = starting_state$e_diag_patches,
+        # i_a_diag_patches = starting_state$i_a_diag_patches,
+        # i_p_diag_patches = starting_state$i_p_diag_patches,
+        # i_s_diag_patches = starting_state$i_s_diag_patches,
+        # r_diag_patches = starting_state$r_diag_patches,
         s_false_patches = starting_state$s_false_patches,
         r_false_patches = starting_state$r_false_patches,
         birth_rates = starting_state$birth_rates,
@@ -340,11 +341,12 @@ run_patch_model_screening_vary_movement2 <- function(movement, dt, sims, startin
           i_p_patches = final_state$value[final_state$variable == "infected_presymptomatic"],
           i_s_patches = final_state$value[final_state$variable == "infected_symptomatic"],
           r_patches = final_state$value[final_state$variable == "recovered"],
-          e_diag_patches = final_state$value[final_state$variable == "exposed_diagnosed"],
-          i_a_diag_patches = final_state$value[final_state$variable == "infected_asymptomatic_diagnosed"],
-          i_p_diag_patches = final_state$value[final_state$variable == "infected_presymptomatic_diagnosed"],
-          i_s_diag_patches = final_state$value[final_state$variable == "infected_symptomatic_diagnosed"],
-          r_diag_patches = final_state$value[final_state$variable == "recovered_diagnosed"],
+          diag_patches = final_state$value[final_state$variable == "all_diagnosed"],
+          # e_diag_patches = final_state$value[final_state$variable == "exposed_diagnosed"],
+          # i_a_diag_patches = final_state$value[final_state$variable == "infected_asymptomatic_diagnosed"],
+          # i_p_diag_patches = final_state$value[final_state$variable == "infected_presymptomatic_diagnosed"],
+          # i_s_diag_patches = final_state$value[final_state$variable == "infected_symptomatic_diagnosed"],
+          # r_diag_patches = final_state$value[final_state$variable == "recovered_diagnosed"],
           s_false_patches = final_state$value[final_state$variable == "susceptible_false_positive"],
           r_false_patches = final_state$value[final_state$variable == "recovered_false_positive"],
           birth_rates = starting_state$birth_rates,
@@ -383,6 +385,45 @@ run_patch_model_screening_vary_movement2 <- function(movement, dt, sims, startin
     for (i in 1:length(movement)) {
       output <- c(output, model_output[[sim]][[i]][[1]])
     }
+    
+    # Remove the parameters from model output to reduce size
+    output_to_keep <- c(
+      "susceptible", "susceptible_false_positive",
+      "exposed", 
+      # "exposed_diagnosed",
+      "infected_asymptomatic",
+      # "infected_asymptomatic_diagnosed",
+      "infected_presymptomatic",
+      # "infected_presymptomatic_diagnosed",
+      "infected_symptomatic",
+      # "infected_symptomatic_diagnosed",
+      "recovered",
+      # "recovered_diagnosed",
+      "recovered_false_positive",
+      "all_diagnosed",
+      "imported_susceptible", "imported_exposed",
+      "imported_infected_asymptomatic", "imported_infected_presymptomatic",
+      "imported_infected_symptomatic", "imported_recovered",
+      "new_exposed_diagnosed", "new_false_neg_exposed",
+      "new_infected_asymptomatic_diagnosed", "new_false_neg_infected_asymptomatic",
+      "new_infected_presymptomatic_diagnosed", "new_false_neg_infected_presymptomatic",
+      "new_infected_symptomatic_diagnosed", "new_false_neg_infected_symptomatic",
+      "new_susceptible_false_positive", "new_recovered_false_positive",
+      "released_s_false", "released_r_false",
+      "released_exposed", "released_infected_asymptomatic",
+      "released_infected_presymptomatic", "released_infected_symptomatic",
+      "released_recovered"
+    )
+    
+    output <- map(output, function(time) {
+      
+      map(time[["patches"]], function(patch) {
+        
+        patch[names(patch) %in% output_to_keep]
+        
+      })
+    })
+    
     model_output[[sim]] <- output
     
   }
@@ -632,7 +673,8 @@ run_patch_model_screening_incomingphase <- function(state_in, dt, nsim, seed = N
             old_state = NULL,
             dt = 1,
             ksa_index = ksa_index,
-            atrisk_index = atrisk_index
+            atrisk_index = atrisk_index,
+            end_of_isolation_probabilities = end_of_isolation_probabilities
           )
         } else {
           this_sim[[time]] <- multipatchr:::update_ksa_state_screening_incomingphase(
@@ -640,7 +682,8 @@ run_patch_model_screening_incomingphase <- function(state_in, dt, nsim, seed = N
             old_state = this_sim[[time - 10]], # can amend this to handle dynamic isolation periods
             dt = 1,
             ksa_index = ksa_index,
-            atrisk_index = atrisk_index
+            atrisk_index = atrisk_index,
+            end_of_isolation_probabilities = end_of_isolation_probabilities
           )
         }
       }
@@ -683,7 +726,8 @@ run_patch_model_screening_otherphases <- function(state_in, old_states, old_stat
             old_state = old_states[[time - 1]],
             dt = 1,
             ksa_index = ksa_index,
-            atrisk_index = atrisk_index
+            atrisk_index = atrisk_index,
+            end_of_isolation_probabilities = end_of_isolation_probabilities
           )
         } else {
           this_sim[[time]] <- multipatchr:::update_ksa_state_screening_otherphases(
@@ -691,7 +735,8 @@ run_patch_model_screening_otherphases <- function(state_in, old_states, old_stat
             old_state = NULL, # can amend this to handle dynamic isolation periods
             dt = 1,
             ksa_index = ksa_index,
-            atrisk_index = atrisk_index
+            atrisk_index = atrisk_index,
+            end_of_isolation_probabilities = end_of_isolation_probabilities
           )
         }
         
@@ -746,36 +791,80 @@ simulation_as_df <- function(simulation) {
 
 simulation_as_df_symptoms <- function(simulation) {
   
-  simulations <- lapply(simulation, function(x) {
-    
-    lapply(x, function(y) {
-      
-      y[["patches"]]
-      
-    })
-  })
+  # simulations <- lapply(simulation, function(x) {
+  #   
+  #   lapply(x, function(y) {
+  #     
+  #     y[["patches"]]
+  #     
+  #   })
+  # })
+  simulations <- simulation
   
   out <- purrr::map_dfr(
     simulations,
-    function(sim) {
-      purrr::map_dfr(sim, function(sim) {
-        x <- as.data.frame(do.call("rbind", sim))
-        x$patch <- as.integer(rownames(x))
-        x
+    function(sim_list) {
+      purrr::map_dfr(sim_list, function(sim) {
+        # browser()
+        purrr::map_dfr(sim, function(patch) {
+          # browser()
+          x <- as.data.frame(unlist(patch))
+          names(x) <- "value"
+          x$variable <- rownames(x)
+          # Remove row names
+          rownames(x) <- NULL
+          # Rename columns and reorder
+          x <- x[, c("variable", "value")]
+          
+        }, .id = "patch")
+        # x <- as.data.frame(do.call("rbind", sim))
+        # x <- bind_rows(as.data.frame(sim))
+        # x$patch <- as.integer(rownames(x))
+        # x
       },
       .id = "time")
     },
     .id = "sim"
   )
+  
+  # Define the order for "variable"
+  variable_order <- c(
+    "susceptible", "susceptible_false_positive",
+    "exposed", #"exposed_diagnosed",
+    "infected_asymptomatic", #"infected_asymptomatic_diagnosed",
+    "infected_presymptomatic", #"infected_presymptomatic_diagnosed",
+    "infected_symptomatic", #"infected_symptomatic_diagnosed",
+    "recovered", #"recovered_diagnosed",
+    "recovered_false_positive",
+    "all_diagnosed",
+    "imported_susceptible", "imported_exposed",
+    "imported_infected_asymptomatic", "imported_infected_presymptomatic",
+    "imported_infected_symptomatic", "imported_recovered",
+    "new_exposed_diagnosed", "new_false_neg_exposed",
+    "new_infected_asymptomatic_diagnosed", "new_false_neg_infected_asymptomatic",
+    "new_infected_presymptomatic_diagnosed", "new_false_neg_infected_presymptomatic",
+    "new_infected_symptomatic_diagnosed", "new_false_neg_infected_symptomatic",
+    "new_susceptible_false_positive", "new_recovered_false_positive",
+    "released_s_false", "released_r_false",
+    "released_exposed", "released_infected_asymptomatic",
+    "released_infected_presymptomatic", "released_infected_symptomatic",
+    "released_recovered"
+  )
+  
+  out <- filter(out, variable %in% variable_order) 
+    
+  # Complete the dataframe with all combinations of sim, time, patch, and variable
+  out <- out %>% 
+    complete(sim, time, patch, variable = variable_order, fill = list(value = 0))
+  
+  out$variable <- factor(out$variable, levels = variable_order)
   out$time <- as.integer(out$time)
-  out <- replace(out, out == 'NULL', 0)
-  out <- pivot_longer(out,
-                      # cols = susceptible:recovery_rate_sym,
-                      cols = c(susceptible:isolation_period,
-                               imported_susceptible:new_recovered_false_positive),
-                      names_to = "variable",
-                      values_to = "value")
+  out$patch <- as.integer(out$patch)
   out$value <- as.numeric(out$value)
+  
+  # Arrange out according to defined levels of "variable"
+  out <- out %>% 
+    arrange(sim, time, patch, factor(variable, levels = variable_order))
   
   out
 }
@@ -786,6 +875,72 @@ format_model_output <- function(model_output) {
   patches <- as.vector(patches_in_model$country_name)
   out$patch <- factor(out$patch, labels = patches)
   out
+  
+}
+
+check_released_numbers <- function(formatted_model_output) {
+  
+  # Summarize the total value of the released variables (excluding those containing "false")
+  released_sum <- formatted_model_output %>%
+    filter(grepl("^released_", variable) & !grepl("false", variable)) %>%
+    group_by(sim, patch, time) %>%
+    summarise(total_released = sum(value, na.rm = TRUE), .groups = 'drop')
+  
+  # Summarize the total value of the new diagnosed variables at time - 10
+  new_diagnosed_sum <- formatted_model_output %>%
+    filter(grepl("^new_.*_diagnosed$", variable)) %>%
+    mutate(time = time + 10) %>%
+    group_by(sim, patch, time) %>%
+    summarise(total_new_diagnosed = sum(value, na.rm = TRUE), .groups = 'drop')
+  
+  # Join the two summaries together to compare them
+  comparison <- released_sum %>%
+    inner_join(new_diagnosed_sum, by = c("sim", "patch", "time")) %>%
+    mutate(equal = total_released == total_new_diagnosed)
+  
+  # Check if there is at least one FALSE value in the column
+  if (any(comparison$equal == FALSE)) {
+    print("There are instances where the number of people released does not equal the number diagnosed at the start of the isolation period. Review the output from this function.")
+  } else {
+    "The number of people released equals the number diagnosed at the start of the isolation period, as expected."
+  }
+  
+}
+
+
+check_all_diagnosed_sums <- function(formatted_model_output) {
+  
+  # Summarize the total value of the new diagnosed variables at time t
+  new_diagnosed_sum <- formatted_model_output %>%
+    filter(grepl("^new_.*_diagnosed$", variable)) %>%
+    group_by(sim, patch, time) %>%
+    summarise(total_new_diagnosed = sum(value, na.rm = TRUE), .groups = 'drop')
+  
+  # all_diagnosed values
+  all_diagnosed <- formatted_model_output %>%
+    filter(variable == "all_diagnosed") %>%
+    group_by(sim, patch, time) %>%
+    summarise(all_diagnosed = sum(value, na.rm = TRUE), .groups = 'drop')
+  
+  # all_released values
+  diagnosed_released <- formatted_model_output %>%
+    filter(grepl("released", variable) & !grepl("false", variable)) %>% 
+    group_by(sim, patch, time) %>%
+    summarise(diagnosed_released = sum(value, na.rm = TRUE), .groups = 'drop')
+  
+  # Join the two summaries together to compare them
+  comparison <- new_diagnosed_sum %>%
+    inner_join(all_diagnosed, by = c("sim", "patch", "time")) %>%
+    inner_join(diagnosed_released, by = c("sim", "patch", "time")) %>% 
+    mutate(lagged_all_diagnosed = lag(all_diagnosed)) %>% 
+    mutate(condition_met = all_diagnosed == lagged_all_diagnosed + total_new_diagnosed - diagnosed_released)
+  
+  # Check if there is at least one FALSE value in the column
+  if (any(comparison$condition_met == FALSE, na.rm = T)) {
+    print("There are instances where the number of people in isolation contains an error. Explore the output generated by this function.")
+  } else {
+    "The numbers of people in isolation are computed as expected."
+  }
   
 }
 

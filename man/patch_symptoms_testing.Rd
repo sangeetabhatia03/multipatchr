@@ -5,8 +5,7 @@
 \title{Constructor for patch class}
 \usage{
 patch_symptoms_testing(s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch,
-  r_patch, e_diag_patch, i_a_diag_patch, i_p_diag_patch, i_s_diag_patch,
-  r_diag_patch, s_false_patch, r_false_patch, birth_rate, death_rate,
+  r_patch, diag_patch, s_false_patch, r_false_patch, birth_rate, death_rate,
   transmission_rate, transmission_rate_pilgrims,
   transmission_rate_pilgrims_and_atrisk, asymptomatic_infectiousness,
   presymptomatic_infectiousness, prop_symptomatic, infection_rate,
@@ -26,15 +25,7 @@ patch_symptoms_testing(s_patch, e_patch, i_a_patch, i_p_patch, i_s_patch,
 
 \item{r_patch}{Number of recovered individuals in patch}
 
-\item{e_diag_patch}{Number of diagnosed exposed individuals in patch}
-
-\item{i_a_diag_patch}{Number of diagnosed asymptomatic infected individuals in patch}
-
-\item{i_p_diag_patch}{Number of diagnosed presymptomatic infected individuals in patch}
-
-\item{i_s_diag_patch}{Number of diagnosed symptomatic infected individuals in patch}
-
-\item{r_diag_patch}{Number of diagnosed recovered individuals in patch}
+\item{diag_patch}{Number of diagnosed individuals in patch}
 
 \item{s_false_patch}{Number of susceptible individuals with false positive test in patch}
 

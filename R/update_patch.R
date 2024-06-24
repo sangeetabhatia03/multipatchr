@@ -107,10 +107,10 @@ update_patch_symptoms <- function(patch, dt, screening = FALSE) {
     )
   }
   
-  # First apply transitions to diagnosed compartments if applicable
-  if (screening) {
-    patch <- update_patch_screening(patch, dt)
-  }
+  # # First apply transitions to diagnosed compartments if applicable
+  # if (screening) {
+  #   patch <- update_patch_screening(patch, dt)
+  # }
   
   # Now apply transitions to undiagnosed compartments
   
@@ -194,6 +194,8 @@ update_patch_symptoms <- function(patch, dt, screening = FALSE) {
 update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
                                       finished_isolating_s,
                                       finished_isolating_r,
+                                      finished_isolating_infected,
+                                      old_state,
                                       screening = FALSE) {
   
   if (! inherits(patch, "patch")) {
@@ -203,12 +205,7 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
     )
   }
   
-  # First apply transitions to diagnosed compartments if applicable
-  if (screening) {
-  patch <- update_patch_screening(patch, dt)
-  }
-  
-  # Now apply transitions to undiagnosed compartments
+  # First apply transitions to undiagnosed compartments
   
   exposure_rate <- patch_exposure_rate
   
@@ -292,6 +289,54 @@ update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
   patch$recovered_false_positive <- patch$recovered_false_positive -
     newly_released_r_false
   
+  # Record the numbers of people released in the model output
+  patch$released_s_false <- newly_released_s_false
+  patch$released_r_false <- newly_released_r_false
+  
+  # By default record set numbers released from isolation as zero
+  patch$released_exposed <- 0
+  patch$released_infected_asymptomatic <- 0
+  patch$released_infected_presymptomatic <- 0
+  patch$released_infected_symptomatic <- 0
+  patch$released_recovered <- 0
+  
+  if (!is.null(old_state)) {
+   
+    # Define the numbers leaving each of the isolation compartments
+    newly_released_exposed <- as.vector(finished_isolating_infected["exposed_diagnosed"])
+    newly_released_infected_asymptomatic <- as.vector(finished_isolating_infected["infected_asymptomatic_diagnosed"])
+    newly_released_infected_presymptomatic <- as.vector(finished_isolating_infected["infected_presymptomatic_diagnosed"])
+    newly_released_infected_symptomatic <- as.vector(finished_isolating_infected["infected_symptomatic_diagnosed"])
+    newly_released_recovered <- as.vector(finished_isolating_infected["recovered_diagnosed"])
+    
+    # Update the undiagnosed compartments with new releases
+    patch$exposed <- patch$exposed + newly_released_exposed
+    patch$infected_asymptomatic <- patch$infected_asymptomatic + newly_released_infected_asymptomatic
+    patch$infected_presymptomatic <- patch$infected_presymptomatic + newly_released_infected_presymptomatic
+    patch$infected_symptomatic <- patch$infected_symptomatic + newly_released_infected_symptomatic
+    patch$recovered <- patch$recovered + newly_released_recovered
+    
+    # Update the diagnosed compartments following new releases
+    patch$all_diagnosed <- patch$all_diagnosed -
+      newly_released_exposed -
+      newly_released_infected_asymptomatic -
+      newly_released_infected_presymptomatic - 
+      newly_released_infected_symptomatic - 
+      newly_released_recovered
+    # patch$infected_asymptomatic_diagnosed <- patch$infected_asymptomatic_diagnosed - newly_released_infected_asymptomatic
+    # patch$infected_presymptomatic_diagnosed <- patch$infected_presymptomatic_diagnosed - newly_released_infected_presymptomatic
+    # patch$infected_symptomatic_diagnosed <- patch$infected_symptomatic_diagnosed - newly_released_infected_symptomatic
+    # patch$recovered_diagnosed <- patch$recovered_diagnosed - newly_released_recovered
+    
+    # Update the numbers of people released in the model output (from the default of 0)
+    patch$released_exposed <- newly_released_exposed
+    patch$released_infected_asymptomatic <- newly_released_infected_asymptomatic
+    patch$released_infected_presymptomatic <- newly_released_infected_presymptomatic
+    patch$released_infected_symptomatic <- newly_released_infected_symptomatic
+    patch$released_recovered <- newly_released_recovered
+    
+  }
+    
   patch
 }
 
