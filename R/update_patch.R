@@ -1,164 +1,402 @@
-deaths <- function(n, death_rate, dt) {
-
-    stats::rbinom(1, size = n, prob = death_rate * dt)
-}
-
-births <- function(n, birth_rate, dt) {
-
-    stats::rbinom(1, size = n, prob = birth_rate * dt)
-}
-
-to_next_compartment <- function(n_current, rate, dt) {
-
-    prob <- 1 - rate_to_probability(rate, dt)
-
-    stats::rbinom(1, size = n_current, prob = prob)
-
-}
-
-
 update_patch <- function(patch, dt) {
-
-    if (! inherits(patch, "patch")) {
-        stop(
-            "Error in updating patch. Argument not of class patch.",
-            call. = FALSE
-        )
-    }
-
-    exposure_rate <- patch$transmission_rate *
-        patch$infected / (patch$susceptible +
-                          patch$exposed +
-                          patch$infected +
-                          patch$recovered)
-
-    newly_exposed <- to_next_compartment(
-          patch$susceptible, exposure_rate, dt
-      )
-
-    patch$susceptible <- patch$susceptible -
-     newly_exposed -
-     deaths(patch$susceptible, patch$death_rate, dt) +
-     births(patch$susceptible, patch$birth_rate, dt)
-
-    newly_infected <-  to_next_compartment(
-        patch$exposed, patch$infection_rate, dt
+  
+  if (! inherits(patch, "patch")) {
+    stop(
+      "Error in updating patch. Argument not of class patch.",
+      call. = FALSE
     )
+  }
+  
+  # conditional statement means that we can handle patches that become empty
+  exposure_rate <- ifelse(patch$susceptible +
+                            patch$exposed +
+                            patch$infected +
+                            patch$recovered > 0,
+                          patch$transmission_rate *
+                            patch$infected / (patch$susceptible +
+                                                patch$exposed +
+                                                patch$infected +
+                                                patch$recovered),
+                          0)
+  
+  newly_exposed <- to_next_compartment(
+    patch$susceptible, exposure_rate, dt
+  )
+  
+  patch$susceptible <- patch$susceptible -
+    newly_exposed -
+    deaths(patch$susceptible, patch$death_rate, dt) +
+    births(patch$susceptible, patch$birth_rate, dt)
+  
+  newly_infected <-  to_next_compartment(
+    patch$exposed, patch$infection_rate, dt
+  )
+  
+  patch$exposed <- patch$exposed -
+    newly_infected -
+    deaths(patch$exposed, patch$death_rate, dt) +
+    newly_exposed
+  
+  newly_recovered <-  to_next_compartment(
+    patch$infected, patch$recovery_rate, dt
+  )
+  patch$infected <- patch$infected -
+    newly_recovered -
+    deaths(patch$infected, patch$death_rate, dt) +
+    newly_infected
+  
+  patch$recovered <- patch$recovered -
+    deaths(patch$recovered, patch$death_rate, dt) +
+    newly_recovered
+  
+  patch
+}
 
-    patch$exposed <- patch$exposed -
-        newly_infected -
-     deaths(patch$exposed, patch$death_rate, dt) +
-     newly_exposed
-
-    newly_recovered <-  to_next_compartment(
-          patch$infected, patch$recovery_rate, dt
+# Function to allow mixing between all the sub-patches in ksa
+update_ksa_patch <- function(patch, dt, patch_exposure_rate) {
+  
+  if (! inherits(patch, "patch")) {
+    stop(
+      "Error in updating patch. Argument not of class patch.",
+      call. = FALSE
     )
-    patch$infected <- patch$infected -
-        newly_recovered -
-     deaths(patch$infected, patch$death_rate, dt) +
-     newly_infected
-
-
-    patch$recovered <- patch$recovered -
-        deaths(patch$recovered, patch$death_rate, dt) +
-        newly_recovered
-
-    patch
+  }
+  
+  exposure_rate <- patch_exposure_rate
+  
+  newly_exposed <- to_next_compartment(
+    patch$susceptible, exposure_rate, dt
+  )
+  
+  patch$susceptible <- patch$susceptible -
+    newly_exposed -
+    deaths(patch$susceptible, patch$death_rate, dt) +
+    births(patch$susceptible, patch$birth_rate, dt)
+  
+  newly_infected <-  to_next_compartment(
+    patch$exposed, patch$infection_rate, dt
+  )
+  
+  patch$exposed <- patch$exposed -
+    newly_infected -
+    deaths(patch$exposed, patch$death_rate, dt) +
+    newly_exposed
+  
+  newly_recovered <-  to_next_compartment(
+    patch$infected, patch$recovery_rate, dt
+  )
+  patch$infected <- patch$infected -
+    newly_recovered -
+    deaths(patch$infected, patch$death_rate, dt) +
+    newly_infected
+  
+  patch$recovered <- patch$recovered -
+    deaths(patch$recovered, patch$death_rate, dt) +
+    newly_recovered
+  
+  patch
 }
 
-rate_to_probability <- function(rate, dt) {
-
-    exp(-rate * dt)
-
-}
-
-get_number_migrating <- function(state, dt, compartments) {
-
-    pmat <- 1 - rate_to_probability(state$movement_rate, dt)
-
-    ## For each compartment, get the number of people moving in and
-    ## out of patches.
-    n_moving <- vector(
-        mode = "list", length = length(compartments)
+# Modified functions for a model w/ symptom compartments
+update_patch_symptoms <- function(patch, dt, screening = FALSE) {
+  
+  if (! inherits(patch, "patch")) {
+    stop(
+      "Error in updating patch. Argument not of class patch.",
+      call. = FALSE
     )
-    names(n_moving) <- compartments
-    n_patches <- length(state[["patches"]])
-    for (compartment in compartments) {
-        n_current <- sapply(state[["patches"]], '[[', compartment)
-        out <- matrix(
-            NA, ncol = n_patches, nrow = n_patches
-        )
-
-        for (idx in seq_len(n_patches)) {
-
-            out[idx, ] <- stats::rmultinom(
-                n = 1,
-                size = n_current[idx],
-                prob = pmat[idx, ]
-            )[,1]
-
-        }
-        n_moving[[compartment]] <- out
-    }
-    n_moving
+  }
+  
+  # # First apply transitions to diagnosed compartments if applicable
+  # if (screening) {
+  #   patch <- update_patch_screening(patch, dt)
+  # }
+  
+  # Now apply transitions to undiagnosed compartments
+  
+  # conditional statement means that we can handle patches that become empty
+  exposure_rate <- ifelse(patch$susceptible +
+                            patch$exposed +
+                            patch$infected_asymptomatic +
+                            patch$infected_presymptomatic +
+                            patch$infected_symptomatic +
+                            patch$recovered > 0,
+                          patch$transmission_rate * (
+                            patch$infected_symptomatic +
+                              (patch$presymptomatic_infectiousness * patch$infected_presymptomatic) + 
+                              (patch$asymptomatic_infectiousness * patch$infected_asymptomatic)) /
+                            (patch$susceptible +
+                               patch$exposed +
+                               patch$infected_asymptomatic +
+                               patch$infected_presymptomatic +
+                               patch$infected_symptomatic +
+                               patch$recovered
+                            ),
+                          0)
+  
+  newly_exposed <- to_next_compartment(
+    patch$susceptible, exposure_rate, dt
+  )
+  
+  patch$susceptible <- patch$susceptible -
+    newly_exposed -
+    deaths(patch$susceptible, patch$death_rate, dt) +
+    births(patch$susceptible, patch$birth_rate, dt)
+  
+  newly_infected <-  to_next_compartment(
+    patch$exposed, patch$infection_rate, dt
+  )
+  
+  newly_infected_presymptomatic <- round(patch$prop_symptomatic * newly_infected)
+  newly_infected_asymptomatic <- newly_infected - newly_infected_presymptomatic
+  
+  patch$exposed <- patch$exposed -
+    newly_infected -
+    deaths(patch$exposed, patch$death_rate, dt) +
+    newly_exposed
+  
+  newly_recovered_asymptomatic <-  to_next_compartment(
+    patch$infected_asymptomatic, patch$recovery_rate_asym, dt
+  )
+  
+  patch$infected_asymptomatic <- patch$infected_asymptomatic -
+    newly_recovered_asymptomatic -
+    deaths(patch$infected_asymptomatic, patch$death_rate, dt) +
+    newly_infected_asymptomatic
+  
+  newly_symptomatic <- to_next_compartment(
+    patch$infected_presymptomatic, patch$symptom_rate, dt
+  )
+  
+  patch$infected_presymptomatic <- patch$infected_presymptomatic -
+    newly_symptomatic -
+    deaths(patch$infected_presymptomatic, patch$death_rate, dt) +
+    newly_infected_presymptomatic
+  
+  newly_recovered_symptomatic <-  to_next_compartment(
+    patch$infected_symptomatic, patch$recovery_rate_sym, dt
+  )
+  
+  patch$infected_symptomatic <- patch$infected_symptomatic -
+    newly_recovered_symptomatic -
+    deaths(patch$infected_symptomatic, patch$death_rate, dt) +
+    newly_symptomatic
+  
+  patch$recovered <- patch$recovered -
+    deaths(patch$recovered, patch$death_rate, dt) +
+    newly_recovered_asymptomatic +
+    newly_recovered_symptomatic
+  
+  patch
 }
 
 
+update_ksa_patch_symptoms <- function(patch, dt, patch_exposure_rate,
+                                      finished_isolating_s,
+                                      finished_isolating_r,
+                                      finished_isolating_infected,
+                                      old_state,
+                                      screening = FALSE) {
+  
+  if (! inherits(patch, "patch")) {
+    stop(
+      "Error in updating patch. Argument not of class patch.",
+      call. = FALSE
+    )
+  }
+  
+  # First apply transitions to undiagnosed compartments
+  
+  exposure_rate <- patch_exposure_rate
+  
+  newly_exposed <- to_next_compartment(
+    patch$susceptible, exposure_rate, dt
+  )
+  
+  if (patch$isolation_period == 0) {
+    
+    warning(
+      "Isolation period is set at 0 days. All false positive susceptibles and
+      recovereds will be returned to S and R."
+    )
+  }
+  
+  # newly_released_s_false <- to_next_compartment(
+  #   patch$susceptible_false_positive, 1/patch$isolation_period, dt
+  #   )
+  
+  newly_released_s_false <- finished_isolating_s
 
-## n_moving is a matrix such that n_moving[i, j] is the
-## number of people moving from i to j. Number of people
-## moving out of patch i then sum(n_moving[i, j], i != j)
-
-to_other_patches <- function(n_moving, patch_idx) {
-
-    sum(n_moving[patch_idx, ]) - n_moving[patch_idx, patch_idx]
-
+  patch$susceptible <- patch$susceptible -
+    newly_exposed -
+    deaths(patch$susceptible, patch$death_rate, dt) +
+    births(patch$susceptible, patch$birth_rate, dt) +
+    newly_released_s_false
+  
+  patch$susceptible_false_positive <- patch$susceptible_false_positive -
+    newly_released_s_false
+  
+  newly_infected <-  to_next_compartment(
+    patch$exposed, patch$infection_rate, dt
+  )
+  
+  newly_infected_presymptomatic <- stats::rbinom(1, newly_infected, patch$prop_symptomatic)
+  newly_infected_asymptomatic <- newly_infected - newly_infected_presymptomatic
+  
+  patch$exposed <- patch$exposed -
+    newly_infected -
+    deaths(patch$exposed, patch$death_rate, dt) +
+    newly_exposed
+  
+  newly_recovered_asymptomatic <-  to_next_compartment(
+    patch$infected_asymptomatic, patch$recovery_rate_asym, dt
+  )
+  
+  patch$infected_asymptomatic <- patch$infected_asymptomatic -
+    newly_recovered_asymptomatic -
+    deaths(patch$infected_asymptomatic, patch$death_rate, dt) +
+    newly_infected_asymptomatic
+  
+  newly_symptomatic <- to_next_compartment(
+    patch$infected_presymptomatic, patch$symptom_rate, dt
+  )
+  
+  patch$infected_presymptomatic <- patch$infected_presymptomatic -
+    newly_symptomatic -
+    deaths(patch$infected_presymptomatic, patch$death_rate, dt) +
+    newly_infected_presymptomatic
+  
+  newly_recovered_symptomatic <-  to_next_compartment(
+    patch$infected_symptomatic, patch$recovery_rate_sym, dt
+  )
+  
+  patch$infected_symptomatic <- patch$infected_symptomatic -
+    newly_recovered_symptomatic -
+    deaths(patch$infected_symptomatic, patch$death_rate, dt) +
+    newly_symptomatic
+  
+  # newly_released_r_false <- to_next_compartment(
+  #   patch$recovered_false_positive, 1/patch$isolation_period, dt
+  # )
+  newly_released_r_false <- finished_isolating_r
+  
+  patch$recovered <- patch$recovered -
+    deaths(patch$recovered, patch$death_rate, dt) +
+    newly_recovered_asymptomatic +
+    newly_recovered_symptomatic +
+    newly_released_r_false
+  
+  patch$recovered_false_positive <- patch$recovered_false_positive -
+    newly_released_r_false
+  
+  # Record the numbers of people released in the model output
+  patch$released_s_false <- newly_released_s_false
+  patch$released_r_false <- newly_released_r_false
+  
+  # By default record set numbers released from isolation as zero
+  patch$released_exposed <- 0
+  patch$released_infected_asymptomatic <- 0
+  patch$released_infected_presymptomatic <- 0
+  patch$released_infected_symptomatic <- 0
+  patch$released_recovered <- 0
+  
+  if (!is.null(old_state)) {
+   
+    # Define the numbers leaving each of the isolation compartments
+    newly_released_exposed <- as.vector(finished_isolating_infected["exposed_diagnosed"])
+    newly_released_infected_asymptomatic <- as.vector(finished_isolating_infected["infected_asymptomatic_diagnosed"])
+    newly_released_infected_presymptomatic <- as.vector(finished_isolating_infected["infected_presymptomatic_diagnosed"])
+    newly_released_infected_symptomatic <- as.vector(finished_isolating_infected["infected_symptomatic_diagnosed"])
+    newly_released_recovered <- as.vector(finished_isolating_infected["recovered_diagnosed"])
+    
+    # Update the undiagnosed compartments with new releases
+    patch$exposed <- patch$exposed + newly_released_exposed
+    patch$infected_asymptomatic <- patch$infected_asymptomatic + newly_released_infected_asymptomatic
+    patch$infected_presymptomatic <- patch$infected_presymptomatic + newly_released_infected_presymptomatic
+    patch$infected_symptomatic <- patch$infected_symptomatic + newly_released_infected_symptomatic
+    patch$recovered <- patch$recovered + newly_released_recovered
+    
+    # Update the diagnosed compartments following new releases
+    patch$all_diagnosed <- patch$all_diagnosed -
+      newly_released_exposed -
+      newly_released_infected_asymptomatic -
+      newly_released_infected_presymptomatic - 
+      newly_released_infected_symptomatic - 
+      newly_released_recovered
+    # patch$infected_asymptomatic_diagnosed <- patch$infected_asymptomatic_diagnosed - newly_released_infected_asymptomatic
+    # patch$infected_presymptomatic_diagnosed <- patch$infected_presymptomatic_diagnosed - newly_released_infected_presymptomatic
+    # patch$infected_symptomatic_diagnosed <- patch$infected_symptomatic_diagnosed - newly_released_infected_symptomatic
+    # patch$recovered_diagnosed <- patch$recovered_diagnosed - newly_released_recovered
+    
+    # Update the numbers of people released in the model output (from the default of 0)
+    patch$released_exposed <- newly_released_exposed
+    patch$released_infected_asymptomatic <- newly_released_infected_asymptomatic
+    patch$released_infected_presymptomatic <- newly_released_infected_presymptomatic
+    patch$released_infected_symptomatic <- newly_released_infected_symptomatic
+    patch$released_recovered <- newly_released_recovered
+    
+  }
+    
+  patch
 }
 
-## n_moving is a matrix such that n_moving[i, j] is the
-## number of people moving from i to j. Number of people
-## moving into patch i sum(n_moving[, i], i != j)
-from_other_patches <- function(n_moving, patch_idx) {
-
-    sum(n_moving[, patch_idx]) - n_moving[patch_idx, patch_idx]
-}
-
-
-
-##' @title Update state
-##' @param state state is a collection of patches and a matrix of
-##' rates of movement between patches.
-##' @param dt time for which state should be updated. It is the user's
-##' responsibility to make sure that this number is consistent
-##' with the units on rates. For instance, if the various rates are
-##' per week, dt is assumed to be dt weeks.
-##' @param compartments in case they are different from SEIR
-##' @return state updated
-##' @author Sangeeta Bhatia
-##' @export
-update_state <- function(state,
-                         dt,
-                         compartments = c("susceptible",
-                                          "exposed",
-                                          "infected",
-                                          "recovered")
-                         ) {
-
-    n_moving <- get_number_migrating(state, dt, compartments)
-    n_patches <- length(state[["patches"]])
-    for (idx in seq_len(n_patches)) {
-
-        patch <- state[["patches"]][[idx]]
-
-        for (compartment in compartments) {
-            patch[[compartment]] <- patch[[compartment]] -
-                to_other_patches(n_moving[[compartment]],  idx) +
-                from_other_patches(n_moving[[compartment]], idx)
-
-        }
-
-        state[["patches"]][[idx]] <- update_patch(patch, dt)
-
-    }
-    state
+update_patch_screening <- function(patch, dt) {
+  
+  if (! inherits(patch, "patch")) {
+    stop(
+      "Error in updating patch. Argument not of class patch.",
+      call. = FALSE
+    )
+  }
+  
+  newly_infected_diagnosed <-  to_next_compartment(
+    patch$exposed_diagnosed, patch$infection_rate, dt
+  )
+  
+  newly_infected_diag_presymptomatic <- stats::rbinom(1, newly_infected_diagnosed, patch$prop_symptomatic)
+  newly_infected_diag_asymptomatic <- newly_infected_diagnosed - newly_infected_diag_presymptomatic
+  
+  patch$exposed_diagnosed <- patch$exposed_diagnosed -
+    newly_infected_diagnosed -
+    deaths(patch$exposed_diagnosed, patch$death_rate, dt)
+  
+  newly_recovered_diag_asymptomatic <-  to_next_compartment(
+    patch$infected_asymptomatic_diagnosed, patch$recovery_rate_asym, dt
+  ) 
+  
+  patch$infected_asymptomatic_diagnosed <- patch$infected_asymptomatic_diagnosed -
+    newly_recovered_diag_asymptomatic -
+    deaths(patch$infected_asymptomatic_diagnosed, patch$death_rate, dt) +
+    newly_infected_diag_asymptomatic
+  
+  newly_diag_symptomatic <- to_next_compartment(
+    patch$infected_presymptomatic_diagnosed, patch$symptom_rate, dt
+  )
+  
+  patch$infected_presymptomatic_diagnosed <- patch$infected_presymptomatic_diagnosed -
+    newly_diag_symptomatic -
+    deaths(patch$infected_presymptomatic_diagnosed, patch$death_rate, dt) +
+    newly_infected_diag_presymptomatic
+  
+  newly_recovered_diag_symptomatic <-  to_next_compartment(
+    patch$infected_symptomatic_diagnosed, patch$recovery_rate_sym, dt
+  )
+  
+  patch$infected_symptomatic_diagnosed <- patch$infected_symptomatic_diagnosed -
+    newly_recovered_diag_symptomatic -
+    deaths(patch$infected_symptomatic_diagnosed, patch$death_rate, dt) +
+    newly_diag_symptomatic
+  
+  patch$recovered_diagnosed <- patch$recovered_diagnosed -
+    deaths(patch$recovered_diagnosed, patch$death_rate, dt) +
+    newly_recovered_diag_asymptomatic +
+    newly_recovered_diag_symptomatic
+  
+  # newly_released_s_false <- to_next_compartment(
+  #   patch$susceptible_false_positive, 1/patch$isolation_period, dt
+  #   )
+  # 
+  # patch$susceptible
+  
+  patch
 }
