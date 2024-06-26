@@ -40,6 +40,7 @@ get_end_of_isolation_probabilities <- function(test_starting_state, isolation_pe
                                       "infected_presymptomatic_diagnosed", "infected_symptomatic_diagnosed"
   )
   
+  
   # The code below generates a list of length(possible_starting_compartments).
   # Each element of the list is a named vector of probabilities.
   # The vector values give the probability that a person starting isolation in a

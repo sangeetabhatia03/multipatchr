@@ -115,6 +115,9 @@ update_patch_symptoms <- function(patch, dt, screening = FALSE) {
   # Now apply transitions to undiagnosed compartments
   
   # conditional statement means that we can handle patches that become empty
+  ## SB: Can you collect the sum of all infected compartments in a variable?
+  ## That will make code easy to understand. Similarly, the other arguments
+  ## should be collected in a variable, even if they are being used  only once.
   exposure_rate <- ifelse(patch$susceptible +
                             patch$exposed +
                             patch$infected_asymptomatic +

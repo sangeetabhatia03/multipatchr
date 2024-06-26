@@ -4,6 +4,7 @@ compute_ksa_exposure_rate_original <- function(state, ksa_index) {
   # Find the sub-patches in KSA using pre-defined ksa_index
   ksa_patches <- state[["patches"]][ksa_index]
   
+
   # How many symptomatic, pre-symptomatic, and asymptomatic
   # infections in KSA at this time, across all sub-patches
   ksa_infections_symptomatic <- ksa_patches %>%
