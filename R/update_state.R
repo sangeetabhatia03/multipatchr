@@ -203,12 +203,19 @@ update_ksa_state_screening_incomingphase <- function(state,
   # Movers arriving in KSA are tested
   # a proportion (equal to testing_rate) test positive
   # calculate this by performing binomial draw for each element in matrix
+  ## SB: Make this an argument so that users can specify which compartments are 
+  ## tested and which are not. This will allow for more flexibility in the model.
   tested_compartments <- c("exposed", "infected_asymptomatic",
                            "infected_presymptomatic", "infected_symptomatic")
   
   movers_in_tested_compartments <- n_moving[tested_compartments]
   
   # single testing rate and sensitivity at the moment so we just extract from one of the patches
+  ## SB: Do you see a scenario where we would want to have multiple testing rates and sensitivities?
+  ## If not, then note in the function documentation that this will be extracted
+  ## from the first patch only.
+  ## Also add a check here, you can extract from all patches and check if there
+  ## is only one unique value, if not, throw a warning.
   test_rate <- state[["patches"]][[1]][["testing_rate"]]
   test_sensitivity <- state[["patches"]][[1]][["test_sensitivity"]]
   
@@ -223,12 +230,17 @@ update_ksa_state_screening_incomingphase <- function(state,
   })
   
   # Record how many false negatives there were
+  ## SB: Wouldn't tested_on_arrival - diagnosed_on_arrival achieve the same thing?
+  ## Sorry if I am talking through my hat here, I am not sure if
+  ## tested_on_arrival and diagnosed_on_arrival are matrices or lists of matrices.
   missed_diagnosis <- purrr::map2(tested_on_arrival, diagnosed_on_arrival, \(x, y) x-y)
   
   # We can also get some pilgrims in S or R who are falsely diagnosed on arrival
   # We assume a certain false positive rate that depends on the test specificity and
   # apply a binomial draw as above
-  
+  ## SB: Same comment as before. To avoid having an unmanageable number of 
+  ## arguments, think about having a function that defines your total model
+  ## structure, and read off of that in this function.
   compartment_sources_of_false_positives <- c("susceptible", "recovered")
   
   movers_in_false_pos_compartments <- n_moving[compartment_sources_of_false_positives]
@@ -283,6 +295,8 @@ update_ksa_state_screening_incomingphase <- function(state,
     # Trialing using exposed_diagnosed as a compartment to represent all isolating pilgrims
     
     # Identify elements that start with "new_" and end with "_diagnosed"
+    ## SB: You don't want to rely on grepping the name of elements
+    ## Could you not have a list of compartnment names here?
     elements_to_sum <- grep("^new_.*_diagnosed$", names(patch), value = TRUE)
     
     # Sum the values of these elements
@@ -305,7 +319,7 @@ update_ksa_state_screening_incomingphase <- function(state,
   }
   
   # Step 2. Update disease states.
-  
+  ## SB: Could this be moved to a separate function?
   # Compute the exposure rates among pilgrims and "at risk" non-pilgrims  
   pilgrim_exposure_rate <- compute_ksa_exposure_rate(state, ksa_index, atrisk_index)
   atrisk_exposure_rate <- compute_atrisk_exposure_rate(state, ksa_index, atrisk_index)
