@@ -246,6 +246,15 @@ update_ksa_state_screening_incomingphase <- function(state,
     apply(mat, c(1, 2), function(x) stats::rbinom(1, x, false_positive_rate))
   })
   
+  # Record how many true negatives there were
+  true_negatives <- purrr::map2(s_or_r_tested_on_arrival,
+                                  falsely_diagnosed_on_arrival, \(x, y) x-y)
+  
+  # test_that("S test results = number of tested S",
+  #           expect_identical(s_or_r_tested_on_arrival[[1]],
+  #                            falsely_diagnosed_on_arrival[[1]] +
+  #                                true_negatives[[1]]))
+  
   diagnoses_on_arrival <- c(diagnosed_on_arrival, falsely_diagnosed_on_arrival)
   
   n_patches <- length(state[["patches"]])
@@ -298,6 +307,11 @@ update_ksa_state_screening_incomingphase <- function(state,
       
       new_false_positive <- paste0("new_", compartment)
       patch[[new_false_positive]] <- from_other_patches(diagnoses_on_arrival[[unscreened_compartment]], idx)
+      
+      new_true_neg <- paste0("new_true_neg_", unscreened_compartment)
+      patch[[new_true_neg]] <- from_other_patches(
+        true_negatives[[unscreened_compartment]], idx)
+      
     }
     
     state[["patches"]][[idx]] <- patch
@@ -346,6 +360,7 @@ update_ksa_state_screening_incomingphase <- function(state,
     }
   }
   state
+  
 }
 
 # use this function when pilgrims are either in KSA or travelling home (no screening occurs)
