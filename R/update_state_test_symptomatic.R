@@ -19,8 +19,8 @@ update_ksa_state_symptom_screening_incomingphase <- function(
                                     "recovered_false_positive"),
     movement_type = c("probability", "rate"), # set default movement type to be prob
     relative_movement = c(1, 1, 1, 1, 1, 1),
-    background_testing_rate = 0.01,
-    symptomatic_testing_rate = 0.99,
+    background_testing_rate = 0.61,
+    symptomatic_testing_rate = 0.87,
     ksa_index, atrisk_index, end_of_isolation_probabilities
 ) {
   
@@ -60,7 +60,8 @@ update_ksa_state_symptom_screening_incomingphase <- function(
     mat <- movers_in_tested_compartments[[name]]
     
     # Set the test rate based on the name of the list element
-    test_rate <- if (name == "infected_symptomatic") {
+    # test_rate <- if (name == "infected_symptomatic") {
+    test_rate <- if (name %in% tested_compartments) {
       symptomatic_testing_rate
     } else {
       background_testing_rate
