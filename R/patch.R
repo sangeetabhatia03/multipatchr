@@ -253,7 +253,10 @@ patch_symptoms <- function(s_patch,
 ##' @param recovery_rate_asym Rate of moving from I_asymptomatic to recovered
 ##' @param recovery_rate_sym Rate of moving from I_symptomatic to recovered
 ##' @param testing_rate Proportion of people that are tested
-##' @param test_sensitivity Sensitivity of tests
+##' @param test_sensitivity Sensitivity of tests. Either a single number,
+##' applied to all infection states, or a named vector/list with entries
+##' for `exposed`, `infected_presymptomatic`, `infected_asymptomatic`, and
+##' `infected_symptomatic` giving a state-dependent sensitivity.
 ##' @param test_specificity Specificity of tests
 ##' @param isolation_period Average duration of isolation following positive test
 ##' @return a list of class patch which has the following items
@@ -410,7 +413,7 @@ patch_symptoms_testing <- function(s_patch,
     recovery_rate_asym = recovery_rate_asym,
     recovery_rate_sym = recovery_rate_sym,
     testing_rate = testing_rate,
-    test_sensitivity = test_sensitivity,
+    test_sensitivity = validate_test_sensitivity(test_sensitivity),
     test_specificity = test_specificity,
     isolation_period = isolation_period
   )

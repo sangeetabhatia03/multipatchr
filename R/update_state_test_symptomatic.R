@@ -53,6 +53,8 @@ update_ksa_state_symptom_screening_incomingphase <- function(
   
   # Define testing rate and sensitivity
   # test_rate <- state[["patches"]][[1]][["testing_rate"]]
+  # test_sensitivity may be state-dependent, so it is kept as a named vector
+  # with one entry per tested compartment
   test_sensitivity <- state[["patches"]][[1]][["test_sensitivity"]]
   
   # for each set of movers, draw from binomial distribution to get number that would be tested
@@ -74,8 +76,9 @@ update_ksa_state_symptom_screening_incomingphase <- function(
   names(tested_on_arrival)  <- names(movers_in_tested_compartments)
     
   # for each set of tested ppl, draw from binomial distribution to get number that would be diagnosed
-  diagnosed_on_arrival <- lapply(tested_on_arrival, function(mat) {
-    apply(mat, c(1, 2), function(x) stats::rbinom(1, x, test_sensitivity))
+  # using the sensitivity specific to that compartment
+  diagnosed_on_arrival <- purrr::imap(tested_on_arrival, function(mat, compartment) {
+    apply(mat, c(1, 2), function(x) stats::rbinom(1, x, test_sensitivity[[compartment]]))
   })
   
   # Record how many false negatives there were

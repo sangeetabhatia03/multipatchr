@@ -61,7 +61,10 @@ symptomatic cases.}
 
 \item{testing_rate}{Proportion of people that are tested}
 
-\item{test_sensitivity}{Sensitivity of tests}
+\item{test_sensitivity}{Sensitivity of tests. Either a single number,
+applied to all infection states, or a named vector/list with entries
+for \code{exposed}, \code{infected_presymptomatic}, \code{infected_asymptomatic}, and
+\code{infected_symptomatic} giving a state-dependent sensitivity.}
 
 \item{test_specificity}{Specificity of tests}
 

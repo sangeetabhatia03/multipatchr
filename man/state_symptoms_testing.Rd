@@ -79,7 +79,11 @@ for symptomatic infections}
 
 \item{testing_rates}{Vector of patch-specific testing rates}
 
-\item{test_sensitivity}{Vector of patch-specific test sensitivity}
+\item{test_sensitivity}{Sensitivity of tests. Either a single number,
+applied to all infection states in every patch, or a named vector/list
+with entries for \code{exposed}, \code{infected_presymptomatic},
+\code{infected_asymptomatic}, and \code{infected_symptomatic} giving a
+state-dependent sensitivity (applied to every patch).}
 
 \item{test_specificity}{Vector of patch-specific test specificity}
 
